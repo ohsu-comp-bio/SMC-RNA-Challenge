@@ -1,0 +1,14 @@
+{ 
+     "bowtie_index": {
+        "class": "File",
+        "path": "test_data/test_ref.1.bt2"
+    },
+    "fastq1": {
+        "class": "File",
+        "path": "test_data/reads_1.fq",
+    },  
+    "fastq2": {
+        "class": "File",
+        "path": "test_data/reads_2.fq",
+    },  
+}
