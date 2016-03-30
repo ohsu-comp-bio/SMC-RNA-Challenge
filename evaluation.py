@@ -18,7 +18,7 @@ def evaluate(args):
 def perform_main(args):
 	if 'func' in args:
 		try:
-			args.func(args,syn)
+			args.func(args)
 		except Exception as ex:
 			print(ex)
 
