@@ -4,7 +4,6 @@ import os
 import argparse
 
 def evaluate(args):
-	inputBedpe,outputBedpe,truth_file
 	val = subprocess.Popen(["python","Validator/bedpeValidator.py", "-c", "Validator/GRCh37.chromosome.strict.txt", "-i",args.inputbedpe , "-o", args.outputBedpe], stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 	out = val.stdout.read()
 	error = val.stderr.read()
