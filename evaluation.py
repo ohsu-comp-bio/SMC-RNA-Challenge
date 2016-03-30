@@ -2,6 +2,7 @@
 
 import os
 import argparse
+import subprocess
 
 def evaluate(args):
 	val = subprocess.Popen(["python","Validator/bedpeValidator.py", "-c", "Validator/GRCh37.chromosome.strict.txt", "-i",args.inputbedpe , "-o", args.outputBedpe], stdout=subprocess.PIPE,stderr=subprocess.PIPE)
