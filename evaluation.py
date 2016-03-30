@@ -16,7 +16,6 @@ def evaluate(args):
 # Args parse
 # ------------------------------------------------------------
 def perform_main(args):
-	syn = synapseclient.login()
 	if 'func' in args:
 		try:
 			args.func(args,syn)
