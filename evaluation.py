@@ -4,15 +4,12 @@ import os
 import argparse
 
 def evaluate(args):
-	 
 	inputBedpe,outputBedpe,truth_file
 	val = subprocess.Popen(["python","Validator/bedpeValidator.py", "-c", "Validator/GRCh37.chromosome.strict.txt", "-i",args.inputbedpe , "-o", args.outputBedpe], stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 	out = val.stdout.read()
 	error = val.stderr.read()
 	if out == '' and error == '':
 		evaluate = subprocess.Popen(["fusionToolEvaluator", "-t", arg.truthfile,"-r",args.outputBedpe,"-g", "examples/ensembl.hg19.txt","-s","examples/rulefile.txt","-o",args.outputBedpe], stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-	else:
-		
 
 
 # ------------------------------------------------------------
