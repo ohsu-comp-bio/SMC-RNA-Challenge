@@ -25,7 +25,7 @@ def evaluate(args):
 		out = evaluate.stdout.read()
 		error = evaluate.stderr.read()
 		if out != '' or error != '':
-			with open("error.log",'w'):
+			with open("error.log",'w') as errors:
 				errors.write("Error!\n")
 				errors.write(out+"\n")
 				errors.write(error)
