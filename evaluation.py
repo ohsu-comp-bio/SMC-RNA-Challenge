@@ -24,12 +24,12 @@ def evaluate(args):
 		evaluate = subprocess.Popen(["fusionToolEvaluator", "-t", args.truthfile,"-r",args.inputbedpe,"-g", "/opt/SMC-RNA-Challenge/examples/ensembl.hg19.txt","-s","/opt/SMC-RNA-Challenge/examples/rulefile.txt","-o",args.outputbedpe], stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 		out = evaluate.stdout.read()
 		error = evaluate.stderr.read()
-		if error != '':
-			with open("error.log",'w') as errors:
-				errors.write("Error!\n")
-				errors.write(out+"\n")
-				errors.write(error)
-				errors.close()
+		#if error != '':
+	#		with open("error.log",'w') as errors:
+	#			errors.write("Error!\n")
+#				errors.write(out+"\n")
+#				errors.write(error)
+#				errors.close()
 
 # ------------------------------------------------------------
 # Args parse
