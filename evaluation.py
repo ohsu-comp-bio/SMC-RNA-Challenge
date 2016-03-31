@@ -7,11 +7,11 @@ import subprocess
 #Add -s
 
 def evaluate(args):
-	val = subprocess.Popen(["python","/opt/SMC-RNA-Challenge/Validator/bedpeValidator.py", "-c", "/opt/SMC-RNA-Challenge/Validator/GRCh37.chromosome.strict.txt", "-i",args.inputbedpe , "-o", args.outputbedpe], stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+	val = subprocess.Popen(["python","/opt/SMC-RNA-Challenge/Validator/bedpeValidator.py", "-c", "/opt/SMC-RNA-Challenge/Validator/GRCh37.chromosome.strict.txt", "-i",args.inputbedpe , "-o", "/tmp/output.bedpe"], stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 	out = val.stdout.read()
 	error = val.stderr.read()
 	if out == '' and error == '':
-		evaluate = subprocess.Popen(["fusionToolEvaluator", "-t", args.truthfile,"-r",args.outputbedpe,"-g", "/opt/SMC-RNA-Challenge/examples/ensembl.hg19.txt","-s","/opt/SMC-RNA-Challenge/examples/rulefile.txt","-o",args.outputbedpe], stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+		evaluate = subprocess.Popen(["fusionToolEvaluator", "-t", args.truthfile,"-r","/tmp/output.bedpe","-g", "/opt/SMC-RNA-Challenge/examples/ensembl.hg19.txt","-s","/opt/SMC-RNA-Challenge/examples/rulefile.txt","-o",args.outputbedpe], stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 
 # ------------------------------------------------------------
 # Args parse
