@@ -14,6 +14,8 @@ def evaluate(args):
 		evaluate = subprocess.Popen(["fusionToolEvaluator", "-t", args.truthfile,"-r","/tmp/output.bedpe","-g", "/opt/SMC-RNA-Challenge/examples/ensembl.hg19.txt","-s","/opt/SMC-RNA-Challenge/examples/rulefile.txt","-o",args.outputbedpe], stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 	else:
 		os.system("touch %s" % args.outputbedpe)
+		os.system("echo %s > %s" % (out,args.outputbedpe))
+		os.system("echo %s >> %s" % (error, args.outputbedpe))
 
 # ------------------------------------------------------------
 # Args parse
