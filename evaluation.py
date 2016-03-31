@@ -7,7 +7,7 @@ import subprocess
 #Add -s
 
 def evaluate(args):
-	val = subprocess.Popen(["bedpeValidator.py", "-c", "/opt/SMC-RNA-Challenge/Validator/GRCh37.chromosome.strict.txt", "-i",args.inputbedpe , "-o", args.outputbedpe], stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+	val = subprocess.Popen(["python","/opt/Validator/bedpeValidator.py", "-c", "/opt/SMC-RNA-Challenge/Validator/GRCh37.chromosome.strict.txt", "-i",args.inputbedpe , "-o", args.outputbedpe], stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 	out = val.stdout.read()
 	error = val.stderr.read()
 	if out == '' and error == '':
