@@ -12,6 +12,8 @@ def evaluate(args):
 	error = val.stderr.read()
 	if out == '' and error == '':
 		evaluate = subprocess.Popen(["fusionToolEvaluator", "-t", args.truthfile,"-r","/tmp/output.bedpe","-g", "/opt/SMC-RNA-Challenge/examples/ensembl.hg19.txt","-s","/opt/SMC-RNA-Challenge/examples/rulefile.txt","-o",args.outputbedpe], stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+	else:
+		os.system("touch %s" % args.outputbedpe)
 
 # ------------------------------------------------------------
 # Args parse
