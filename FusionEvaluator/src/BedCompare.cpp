@@ -42,11 +42,12 @@ int getRange1(uint32_t tt_pos5, int max_diff, uint32_t & tt_pos5_l, uint32_t & t
 
 int getNewMaxDiff(const int & max_diff, const uint32_t & pos5, uint32_t & pos3)
 {
-    
+    if(pos5<1 || pos3<1)
+        cerr<<"check coordinates in truth file for values < 1."<<endl;
     
     int new_max_diff=max_diff;
-    if(pos5<new_max_diff+1)    //about pos5-1:
-        new_max_diff=pos5-1;    //valiator should have this covered
+    if(pos5<new_max_diff+1)   
+        new_max_diff=pos5-1;    
     if(pos3<new_max_diff+1)
         new_max_diff=pos3-1;
     if(new_max_diff<0)
@@ -107,6 +108,20 @@ int  getNewTruePos(const bedpe_t & tt, const bedpe_t & rr, const uint32_t & tt_p
 
 int transcript_compare(Bedpe & res, Bedpe & truth, int resolution, int max_diff, double & sensitivity, double & precision, pseudo_counts_t & pct)
 {
+    int diff=resolution-1;
+    if(diff<0)
+    {
+         cerr<<"resolution must >=1 base"<<endl;
+         exit(1);
+    }
+
+    if(max_diff<0)
+    {
+         cerr<<"max-diff must >=0 base"<<endl;
+         exit(1);
+    }
+
+
     vector<int> found(truth.size(),0);
     vector<int> correct(res.size(),0);
 
@@ -123,12 +138,6 @@ int transcript_compare(Bedpe & res, Bedpe & truth, int resolution, int max_diff,
                  truth.getPos(tt, tt_pos5, tt_pos3);
                  truth.getPos(rr, rr_pos5, rr_pos3);             
    
-                 int diff=resolution-1;
-                 if(diff<0)
-                 {
-                     cerr<<"resolution must >=1 base"<<endl;
-                     exit(1);
-                 }
                  uint32_t tt_pos5_l, tt_pos5_r, tt_pos3_l, tt_pos3_r;
 
                  //for homology
