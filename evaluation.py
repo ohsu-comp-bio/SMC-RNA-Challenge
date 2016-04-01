@@ -19,7 +19,7 @@ def validate(args):
 
 def evaluate(args):
 	if os.path.basename(args.inputbedpe) == "error.log":
-		args.outputbedpe = args.inputbedpe
+		os.system("cat %s > error.log" % args.inputbedpe)
 	else:
 		evaluate = subprocess.Popen(["fusionToolEvaluator", "-t", args.truthfile,"-r",args.inputbedpe,"-g", "/opt/SMC-RNA-Challenge/examples/ensembl.hg19.txt","-s","/opt/SMC-RNA-Challenge/examples/rulefile.txt","-o",args.outputbedpe], stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 		out = evaluate.stdout.read()
