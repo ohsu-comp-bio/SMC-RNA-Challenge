@@ -15,7 +15,7 @@ with open(workflowjson) as data_file:
 		raise ValueError("No secondary files to Merge")
 	else:
 		combined = []
-		#Dependencies:
+		#Dependencies
 		for dep in data['secondaryFiles']:
 			depcwl = open(dep['path'][7:],"r")
 			docs = yaml.load(depcwl)
