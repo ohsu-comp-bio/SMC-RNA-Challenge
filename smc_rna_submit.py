@@ -67,7 +67,7 @@ def validate_workflow(workflow):
 
     assert docs['cwlVersion'] == 'cwl:draft-3'
     if docs.get('$graph',None) is None:
-        raise ValueError("Did not run mergeWorkflowCWL.py on main workflow.cwl")
+        raise ValueError("Please run 'python smc_rna_submit.py merge --CWLfile workflow.cwl'")
     else:
         cwltools = []
         workflowinputs = []
@@ -121,20 +121,64 @@ def name_clean(name):
     return re.sub(r'[^\w]', "_", name)
 
 
-def main_submit(syn, CWLfile, indexFilesFolder=None,project_id=None,teamName = None):
+def submit_workflow(syn, args):
     """
+    Submit to challenge
     """
     ## When you submit, you grant permissions to the Admin team
     #syn.setAnnotations(syn.get(output['workflow_entity']), submission)
     #give_synapse_permissions(syn, syn.get(project_id), CHALLENGE_ADMIN_TEAM_ID)
-    if project_id is None:
+    if args.projectId is None:
         project = syn.store(Project("SMC-RNA-Challenge %s %s" % (syn.getUserProfile().userName, time.time())))
-    CWL = syn.store(File(CWLfile, parent = project))
-    if indexFilesFolder is not None:
-        print("wooo")
+    CWL = syn.store(File(args.CWLfile, parent = project))
     print "Submitting workflow %s" % (CWL.name)
-    submission = syn.submit(EVALUATION_QUEUE_ID, CWL, name=CWL.name, team=teamName)
+    submission = syn.submit(EVALUATION_QUEUE_ID, CWL, name=CWL.name, team=args.teamName)
     print "Created submission ID: %s" % submission.id
+
+
+def validateAndSubmit(syn, args):
+    try:
+        validate_workflow(args)
+        submit_workflow(syn, args)
+    except Exception as e:
+        print(e)
+
+def merge(args):
+    CWLfile = args.CWLfile
+    fileName = CWLfile.split(".")
+    os.system("cwltool --print-deps %s > %s_dep.json" % (CWLfile,fileName[0]))
+    workflowjson = "%s_dep.json" % (fileName[0])
+
+    with open(workflowjson) as data_file:    
+        data = json.load(data_file)
+        if data.get('secondaryFiles',None) is None:
+            raise ValueError("No secondary files to Merge")
+        else:
+            combined = []
+            #Dependencies
+            for dep in data['secondaryFiles']:
+                depcwl = open(dep['path'][7:],"r")
+                docs = yaml.load(depcwl)
+                docs['id'] = str(os.path.basename(dep['path']))
+                del docs['cwlVersion']
+                combined.append(docs)
+            #Workflow
+            workflow = open(data['path'][7:],"r")
+            docs = yaml.load(workflow)
+            del docs['cwlVersion']
+            docs['id'] = str(os.path.basename(data['path']))
+            for steps in docs['steps']:
+                steps['run'] = "#" + steps['run']
+                for i in steps['inputs']:
+                    if i.get('source',False):
+                        i['source'] = "#%s/%s" % (docs['id'],i['source'][1:])
+            for steps in docs['outputs']:
+                steps['source'] = "#%s/%s" % (docs['id'],steps['source'][1:])
+            combined.append(docs)
+            merged = {"cwlVersion":"cwl:draft-3","$graph":combined}
+
+            with open('%s_merged.cwl' %fileName[0], 'w') as outfile:
+                outfile.write(yaml.dump(merged))
 
 
 if __name__ == "__main__":
@@ -144,41 +188,59 @@ if __name__ == "__main__":
     parser.add_argument("--synapse_email", help="Synapse UserName", default=None)
     parser.add_argument("--password", help="Synapse password", default=None)
 
-    parser.add_argument("--CWLfile", help="CWL file for submission", required=True)
-    parser.add_argument("--meta", help="Submission Metadata", required=False)
-    
-    parser.add_argument("--teamname", help="Synapse team name",default=None)
+    subparsers = parser.add_subparsers(title='commands',
+            description='The following commands are available:')
 
-    parser.add_argument("--project-id", help="The SYN id of your personal private working directory")
+    parser_merge = subparsers.add_parser('merge',
+            help='Merge all CWL files into one CWL file')
+    parser_merge.add_argument('--CWLfile',  metavar='workflow.cwl', type=str, required=True,
+            help='CWL workflow file')
+    parser_merge.set_defaults(func=merge)
 
-    parser.add_argument("--check", action="store_true",default=False)
+    parser_validate = subparsers.add_parser('validate',
+            help='Validate CWL file')
+    parser_validate.add_argument('--CWLfile',  metavar='workflow.cwl', type=str, required=True,
+            help='CWL workflow file')
+    parser_validate.set_defaults(func=validate_workflow)
 
-    parser.add_argument("--submit", action="store_true", default=False)
-    parser.add_argument("--no_upload",action="store_true",default=False)
+    parser_submit = subparsers.add_parser('submit',
+            help='Validate CWL file')
+    parser_submit.add_argument('--CWLfile',  metavar='workflow.cwl', type=str, required=True,
+            help='CWL workflow file')
+    parser_submit.add_argument('--teamname',  metavar='My Team', type=str, default = None
+            help='Challenge team name, leave blank if not part of a team')
+    parser_submit.add_argument('--projectId',  metavar='syn123', type=str, default = None
+            help='Synapse Id of a project that you want the submission to be uploaded to, will create a project automatically if no projectId is specified')
+    parser_submit.set_defaults(func=submit_workflow)
 
-    parser.add_argument("-w", "--indexFilesFolder",help="/path/to/index/file/folder/",default=None)
+    parser_validateAndSubmit = subparsers.add_parser('validateAndSubmit',
+            help='Validate and Submit CWL file')
+    parser_validateAndSubmit.add_argument('--CWLfile',  metavar='workflow.cwl', type=str, required=True,
+            help='CWL workflow file')
+    parser_validateAndSubmit.add_argument('--teamname',  metavar='My Team', type=str, default = None
+            help='Challenge team name, leave blank if not part of a team')
+    parser_validateAndSubmit.add_argument('--projectId',  metavar='syn123', type=str, default = None
+            help='Synapse Id of a project that you want the submission to be uploaded to, will create a project automatically if no projectId is specified')
+    parser_validateAndSubmit.set_defaults(func=validateAndSubmit)
 
     args = parser.parse_args()
-    if not args.no_upload:
-        syn = synapseclient.Synapse()
-        if args.synapse_email is not None and args.synapse_key is not None:
-            syn.login(email=args.synapse_email, password=args.password)
-        else:
-            if 'SYNAPSE_APIKEY' in os.environ and 'SYNAPSE_EMAIL' in os.environ:
-                syn.login(email=os.environ['SYNAPSE_EMAIL'], apiKey=os.environ['SYNAPSE_APIKEY'])
-            else:
-                syn.login()
+
+    syn = synapseclient.Synapse()
+    if args.synapse_email is not None and args.synapse_key is not None:
+        syn.login(email=args.synapse_email, password=args.password)
     else:
-        syn = None
+        if 'SYNAPSE_APIKEY' in os.environ and 'SYNAPSE_EMAIL' in os.environ:
+            syn.login(email=os.environ['SYNAPSE_EMAIL'], apiKey=os.environ['SYNAPSE_APIKEY'])
+        else:
+            syn.login()
 
+perform_main(syn, args)
 
-    submit = args.submit
-    run_check = args.check
-
-    if run_check:
-        validated = validate_workflow(args.CWLfile)
-    if validated and submit:
-        main_submit(syn, args.CWLfile)
     
-
+def perform_main(syn, args):
+    if 'func' in args:
+        try:
+            args.func(args,syn)
+        except Exception as ex:
+            print(ex)
 
