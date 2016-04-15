@@ -129,6 +129,7 @@ def submit_workflow(syn, args):
         validate_workflow(syn, args)
         if args.projectId is None:
             project = syn.store(Project("SMC-RNA-Challenge %s %s" % (syn.getUserProfile().userName, time.time())))
+            args.projectId = project['id']
         CWL = syn.store(File(args.CWLfile, parent = project))
         print "Submitting workflow %s" % (CWL.name)
         submission = syn.submit(EVALUATION_QUEUE_ID, CWL, name=CWL.name, team=args.teamName)
@@ -136,8 +137,7 @@ def submit_workflow(syn, args):
     except Exception as e:
         print(e)
     ## When you submit, you grant permissions to the Admin team
-    #syn.setAnnotations(syn.get(output['workflow_entity']), submission)
-    #give_synapse_permissions(syn, syn.get(project_id), CHALLENGE_ADMIN_TEAM_ID)
+    #give_synapse_permissions(syn, syn.get(args.projectId), CHALLENGE_ADMIN_TEAM_ID)
 
 
 def merge(syn, args):
@@ -209,16 +209,6 @@ if __name__ == "__main__":
     parser_submit.add_argument('--projectId',  metavar='syn123', type=str, default = None,
             help='Synapse Id of a project that you want the submission to be uploaded to, will create a project automatically if no projectId is specified')
     parser_submit.set_defaults(func=submit_workflow)
-
-    # parser_validateAndSubmit = subparsers.add_parser('validateAndSubmit',
-    #         help='Validate and Submit CWL file')
-    # parser_validateAndSubmit.add_argument('--CWLfile',  metavar='workflow.cwl', type=str, required=True,
-    #         help='CWL workflow file')
-    # parser_validateAndSubmit.add_argument('--teamName',  metavar='My Team', type=str, default = None,
-    #         help='Challenge team name, leave blank if not part of a team')
-    # parser_validateAndSubmit.add_argument('--projectId',  metavar='syn123', type=str, default = None,
-    #         help='Synapse Id of a project that you want the submission to be uploaded to, will create a project automatically if no projectId is specified')
-    # parser_validateAndSubmit.set_defaults(func=validateAndSubmit)
 
     args = parser.parse_args()
 
