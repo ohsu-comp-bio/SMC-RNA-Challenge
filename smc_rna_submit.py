@@ -52,14 +52,14 @@ CONFIG_FILE = os.path.join(os.environ['HOME'], ".dreamSubmitConfig")
 CHALLENGE_ADMIN_TEAM_ID = 3322844
 EVALUATION_QUEUE_ID = 5877348
 
-def validate_workflow(workflow):
+def validate_workflow(syn,args):
     try:
-        test = subprocess.check_call(["cwltool", "--print-pre", workflow])
+        test = subprocess.check_call(["cwltool", "--non-strict", "--print-pre", args.CWLfile])
     except Exception as e:
         raise ValueError("Your CWL file is not formatted correctly",e)
 
     print "Checking Workflow"
-    with open(workflow,"r") as cwlfile:
+    with open(args.CWLfile,"r") as cwlfile:
         try:
             docs = yaml.load(cwlfile)
         except Exception as e:
@@ -125,25 +125,22 @@ def submit_workflow(syn, args):
     """
     Submit to challenge
     """
+    try:
+        validate_workflow(syn, args)
+        if args.projectId is None:
+            project = syn.store(Project("SMC-RNA-Challenge %s %s" % (syn.getUserProfile().userName, time.time())))
+        CWL = syn.store(File(args.CWLfile, parent = project))
+        print "Submitting workflow %s" % (CWL.name)
+        submission = syn.submit(EVALUATION_QUEUE_ID, CWL, name=CWL.name, team=args.teamName)
+        print "Created submission ID: %s" % submission.id
+    except Exception as e:
+        print(e)
     ## When you submit, you grant permissions to the Admin team
     #syn.setAnnotations(syn.get(output['workflow_entity']), submission)
     #give_synapse_permissions(syn, syn.get(project_id), CHALLENGE_ADMIN_TEAM_ID)
-    if args.projectId is None:
-        project = syn.store(Project("SMC-RNA-Challenge %s %s" % (syn.getUserProfile().userName, time.time())))
-    CWL = syn.store(File(args.CWLfile, parent = project))
-    print "Submitting workflow %s" % (CWL.name)
-    submission = syn.submit(EVALUATION_QUEUE_ID, CWL, name=CWL.name, team=args.teamName)
-    print "Created submission ID: %s" % submission.id
 
 
-def validateAndSubmit(syn, args):
-    try:
-        validate_workflow(args)
-        submit_workflow(syn, args)
-    except Exception as e:
-        print(e)
-
-def merge(args):
+def merge(syn, args):
     CWLfile = args.CWLfile
     fileName = CWLfile.split(".")
     os.system("cwltool --print-deps %s > %s_dep.json" % (CWLfile,fileName[0]))
@@ -199,29 +196,29 @@ if __name__ == "__main__":
 
     parser_validate = subparsers.add_parser('validate',
             help='Validate CWL file')
-    parser_validate.add_argument('--CWLfile',  metavar='workflow.cwl', type=str, required=True,
+    parser_validate.add_argument('--CWLfile',  metavar='workflow_merged.cwl', type=str, required=True,
             help='CWL workflow file')
     parser_validate.set_defaults(func=validate_workflow)
 
     parser_submit = subparsers.add_parser('submit',
-            help='Validate CWL file')
-    parser_submit.add_argument('--CWLfile',  metavar='workflow.cwl', type=str, required=True,
+            help='Submit CWL file')
+    parser_submit.add_argument('--CWLfile',  metavar='workflow_merged.cwl', type=str, required=True,
             help='CWL workflow file')
-    parser_submit.add_argument('--teamname',  metavar='My Team', type=str, default = None
+    parser_submit.add_argument('--teamName',  metavar='My Team', type=str, default = None,
             help='Challenge team name, leave blank if not part of a team')
-    parser_submit.add_argument('--projectId',  metavar='syn123', type=str, default = None
+    parser_submit.add_argument('--projectId',  metavar='syn123', type=str, default = None,
             help='Synapse Id of a project that you want the submission to be uploaded to, will create a project automatically if no projectId is specified')
     parser_submit.set_defaults(func=submit_workflow)
 
-    parser_validateAndSubmit = subparsers.add_parser('validateAndSubmit',
-            help='Validate and Submit CWL file')
-    parser_validateAndSubmit.add_argument('--CWLfile',  metavar='workflow.cwl', type=str, required=True,
-            help='CWL workflow file')
-    parser_validateAndSubmit.add_argument('--teamname',  metavar='My Team', type=str, default = None
-            help='Challenge team name, leave blank if not part of a team')
-    parser_validateAndSubmit.add_argument('--projectId',  metavar='syn123', type=str, default = None
-            help='Synapse Id of a project that you want the submission to be uploaded to, will create a project automatically if no projectId is specified')
-    parser_validateAndSubmit.set_defaults(func=validateAndSubmit)
+    # parser_validateAndSubmit = subparsers.add_parser('validateAndSubmit',
+    #         help='Validate and Submit CWL file')
+    # parser_validateAndSubmit.add_argument('--CWLfile',  metavar='workflow.cwl', type=str, required=True,
+    #         help='CWL workflow file')
+    # parser_validateAndSubmit.add_argument('--teamName',  metavar='My Team', type=str, default = None,
+    #         help='Challenge team name, leave blank if not part of a team')
+    # parser_validateAndSubmit.add_argument('--projectId',  metavar='syn123', type=str, default = None,
+    #         help='Synapse Id of a project that you want the submission to be uploaded to, will create a project automatically if no projectId is specified')
+    # parser_validateAndSubmit.set_defaults(func=validateAndSubmit)
 
     args = parser.parse_args()
 
@@ -234,13 +231,13 @@ if __name__ == "__main__":
         else:
             syn.login()
 
-perform_main(syn, args)
 
-    
 def perform_main(syn, args):
     if 'func' in args:
         try:
-            args.func(args,syn)
+            args.func(syn,args)
         except Exception as ex:
             print(ex)
+
+perform_main(syn, args)
 
