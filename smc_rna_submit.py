@@ -214,12 +214,9 @@ if __name__ == "__main__":
 
     syn = synapseclient.Synapse()
     if args.synapse_email is not None and args.synapse_key is not None:
-        syn.login(email=args.synapse_email, password=args.password)
+        syn.login(email=args.synapse_email, password=args.password,rememberMe=True)
     else:
-        if 'SYNAPSE_APIKEY' in os.environ and 'SYNAPSE_EMAIL' in os.environ:
-            syn.login(email=os.environ['SYNAPSE_EMAIL'], apiKey=os.environ['SYNAPSE_APIKEY'])
-        else:
-            syn.login()
+        syn.login()
 
 
 def perform_main(syn, args):
