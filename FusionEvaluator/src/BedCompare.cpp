@@ -192,7 +192,7 @@ int transcript_compare(Bedpe & res, Bedpe & truth, int resolution, int max_diff,
 
 
 
-int BedpeCompare::compare(Bedpe & res, Bedpe & truth, Gene & g, evaluate_t & et, int resolution, int max_diff, pseudo_counts_t & pct)
+int BedpeCompare::compare(Bedpe & res, Bedpe & truth, Gene & g, evaluate_t & et, int resolution, int max_diff, pseudo_counts_t & pct, int print_num)
 {
 //trans 1. 0 0; 2. compare;
     int num_res_trans=res.size()+pct.t_t+pct.f_t;;
@@ -201,7 +201,30 @@ int BedpeCompare::compare(Bedpe & res, Bedpe & truth, Gene & g, evaluate_t & et,
     et.num_res_trans=num_res_trans;
     et.num_truth_trans=num_truth_trans;   
   
-    if(num_res_trans==0 || num_truth_trans==0)
+    if((num_res_trans==0 || num_truth_trans==0) && print_num==1)
+    {
+        if(num_res_trans==0 && num_truth_trans!=0)
+        {
+            et.sensitivity_t="0";
+            et.precision_t="1";
+            et.f_t="0";
+        }
+ 
+        if(num_res_trans!=0 && num_truth_trans==0)
+        {
+            et.sensitivity_t="1";
+            et.precision_t="0";
+            et.f_t="0";
+        }      
+
+        if(num_res_trans==0 && num_truth_trans==0)
+        {
+            et.sensitivity_t="1";
+            et.precision_t="1";
+            et.f_t="1";
+        }
+    }
+    else if((num_res_trans==0 || num_truth_trans==0) &&  print_num==0)
     {
         if(num_res_trans==0 && num_truth_trans!=0)
         {
@@ -209,13 +232,13 @@ int BedpeCompare::compare(Bedpe & res, Bedpe & truth, Gene & g, evaluate_t & et,
             et.precision_t="NA";
             et.f_t="NA";
         }
- 
+
         if(num_res_trans!=0 && num_truth_trans==0)
         {
             et.sensitivity_t="NA";
             et.precision_t="0";
             et.f_t="NA";
-        }      
+        }
 
         if(num_res_trans==0 && num_truth_trans==0)
         {
@@ -232,7 +255,16 @@ int BedpeCompare::compare(Bedpe & res, Bedpe & truth, Gene & g, evaluate_t & et,
         
         et.sensitivity_t=my_db2string(sens_t);
         et.precision_t=my_db2string(prec_t);
-        et.f_t=my_db2string(f1_t);
+        if(sens_t==0 && prec_t==0)
+        {
+            if(print_num==1)
+                et.f_t="0";
+            else
+                et.f_t="NA";
+        } 
+        else            
+            et.f_t=my_db2string(f1_t);
+        
     }
 
 //gene 1. id set pair; 2. 0 0; 3. compare;
@@ -253,7 +285,30 @@ int BedpeCompare::compare(Bedpe & res, Bedpe & truth, Gene & g, evaluate_t & et,
     et.num_res_gene=num_res_gene;
     et.num_truth_gene=num_truth_gene;
 
-    if(num_res_gene==0 || num_truth_gene==0)
+    if((num_res_gene==0 || num_truth_gene==0) && print_num==1)
+    {
+        if(num_res_gene==0 && num_truth_gene!=0)
+        {
+            et.sensitivity_g="0";
+            et.precision_g="1";
+            et.f_g="0";
+        }
+
+        if(num_res_gene!=0 && num_truth_gene==0)
+        {
+            et.sensitivity_g="1";
+            et.precision_g="0";
+            et.f_g="0";
+        }
+
+        if(num_res_gene==0 && num_truth_gene==0)
+        {
+            et.sensitivity_g="1";
+            et.precision_g="1";
+            et.f_g="1";
+        }
+    }
+    else if((num_res_gene==0 || num_truth_gene==0) && print_num==0)
     {
         if(num_res_gene==0 && num_truth_gene!=0)
         {
@@ -288,6 +343,16 @@ int BedpeCompare::compare(Bedpe & res, Bedpe & truth, Gene & g, evaluate_t & et,
         et.sensitivity_g=my_db2string(sens_g);
         et.precision_g=my_db2string(prec_g);
         et.f_g=my_db2string(f1_g);
+        
+        if(sens_g==0 && prec_g==0)
+        {
+            if(print_num==1)
+                et.f_g="0";
+            else
+                et.f_g="NA";
+        }
+        else
+            et.f_g=my_db2string(f1_g);
 
     }
     return 0;
