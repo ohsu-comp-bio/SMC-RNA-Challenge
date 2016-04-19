@@ -21,7 +21,7 @@ map<int,char> intChar;
 map<char,char> charChar;
 map<string,char> tableAmino;
 
-string version("0.1.1");
+string version("0.1.2");
 
 int usage()
 {
@@ -51,7 +51,8 @@ int usage()
     cerr<<"    -s/--subsetting-rule-file    <string>    [  2 columns             refer to SMC-RNA          ]"<<endl;
     cerr<<"    -o/--output-file             <string>    "<<endl;
     cerr<<"    -b/--base-resolution         <int>       [ default: 1                                       ]"<<endl;
-    cerr<<"    -m/--max-diff                <int>       [ default: 20, tolerance for local homology.       ]"<<endl;
+    cerr<<"    -m/--max-diff                <int>       [ default: 20, tolerance for local homology        ]"<<endl;
+    cerr<<"    -u/--use-number              <No value>  [ turn on theoretical metric for 0 denominator     ]"<<endl; 
     cerr<<"    -p/--pseudo-counts           <string>    [ default: 0,0,0,0,0,0                             ]"<<endl;
     cerr<<"                                             [ in order of tp_t,fp_t,truth_t,tp_g,fp_g,truth_g  ]"<<endl;
     cerr<<endl;
@@ -73,7 +74,7 @@ int main(int argc, char * argv[])
     int base_resolution=1;
     int max_diff=20;
     string pseudo_counts="0,0,0,0,0,0";
-
+    int print_num=0;
 
     static struct option long_options[] = {
         {"truth-file",            required_argument, 0,  0 },
@@ -84,13 +85,14 @@ int main(int argc, char * argv[])
         {"base-resolution",       required_argument, 0,  0 },
         {"max-diff",              required_argument, 0,  0 },
         {"pseudo-counts",         required_argument, 0,  0 },
+        {"use-number",            no_argument,       0,  0 },
         {"help",                  no_argument,       0,  0 },
         {0, 0, 0, 0}
     };
 
     while(1)
     {
-        c = getopt_long(argc, argv, "t:r:g:o:s:b:m:p:h",
+        c = getopt_long(argc, argv, "t:r:g:o:s:b:m:p:uh",
                  long_options, &option_index);
         if (c==-1)
         {
@@ -124,6 +126,9 @@ int main(int argc, char * argv[])
                 break;
             case 'p':
                 pseudo_counts=optarg;
+                break;
+            case 'u':
+                print_num=1;
                 break;
             default:
                 break;
@@ -162,7 +167,7 @@ int main(int argc, char * argv[])
     cerr<<"comparing by subsetting rules..."<<endl;
 
     ExecuteByRule exe;
-    exe.execute(res, truth, (char*)output_file.c_str(), (char*)rule_file.c_str(), evaluates, g, base_resolution, max_diff, pct);
+    exe.execute(res, truth, (char*)output_file.c_str(), (char*)rule_file.c_str(), evaluates, g, base_resolution, max_diff, pct, print_num);
 
     cerr<<"printing evaluation results..."<<endl;
    

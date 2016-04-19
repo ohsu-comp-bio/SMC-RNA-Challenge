@@ -6,7 +6,7 @@ typedef struct
     string rule;
 } rule_t;
 
-int ExecuteByRule::execute(Bedpe & res, Bedpe & truth, char * outputfile, char * rulefile, vector<evaluate_t> & evaluates, Gene & g, int resolution, int max_diff, pseudo_counts_t & pct)
+int ExecuteByRule::execute(Bedpe & res, Bedpe & truth, char * outputfile, char * rulefile, vector<evaluate_t> & evaluates, Gene & g, int resolution, int max_diff, pseudo_counts_t & pct, int print_num)
 {
   string line;
   vector<rule_t> rtv;
@@ -39,7 +39,7 @@ int ExecuteByRule::execute(Bedpe & res, Bedpe & truth, char * outputfile, char *
      
       evaluate_t et; 
       et.name=rtv[i].name;
-      bcomp.compare(outRes, outTruth, g, et, resolution, max_diff, pct);
+      bcomp.compare(outRes, outTruth, g, et, resolution, max_diff, pct, print_num);
       evaluates.push_back(et);
   }  
 

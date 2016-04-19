@@ -23,7 +23,7 @@ class BedpeCompare
 {
     public:
         BedpeCompare(){};
-        int compare(Bedpe & res, Bedpe & truth, Gene & g, evaluate_t & et, int resolution, int max_diff, pseudo_counts_t & pct);
+        int compare(Bedpe & res, Bedpe & truth, Gene & g, evaluate_t & et, int resolution, int max_diff, pseudo_counts_t & pct, int print_num);
 
 };
 

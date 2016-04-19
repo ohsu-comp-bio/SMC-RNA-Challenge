@@ -23,7 +23,7 @@ class ExecuteByRule
 {
     public:
         ExecuteByRule(){};
-        int execute(Bedpe & res, Bedpe & truth, char * outputfile, char * rulefile, vector<evaluate_t> & evaluates, Gene & g, int resolution, int max_diff, pseudo_counts_t & pct);
+        int execute(Bedpe & res, Bedpe & truth, char * outputfile, char * rulefile, vector<evaluate_t> & evaluates, Gene & g, int resolution, int max_diff, pseudo_counts_t & pct, int print_num);
 };
 
 
