@@ -67,13 +67,14 @@ def validate_workflow(syn,args):
 
     assert docs['cwlVersion'] == 'cwl:draft-3'
     if docs.get('$graph',None) is None:
-        raise ValueError("Please run 'python smc_rna_submit.py merge --CWLfile workflow.cwl'")
+        raise ValueError("Please run 'python smc_rna_submit.py merge --CWLfile %s'" % args.CWLfile)
     else:
+        requiredInputs = []
         cwltools = []
         workflowinputs = []
-        workflowsteps = []
         workflowoutputs = []
         merged = docs['$graph']
+        synId = None
         for tools in merged:
             if tools['class'] == 'CommandLineTool':
                 for i in tools['inputs']:
@@ -81,22 +82,44 @@ def validate_workflow(syn,args):
                 for i in tools['outputs']:
                     cwltools.append("%s/%s/%s" % ("output",tools['id'],i['id']))
             else:
+                #Check: Workflow class
                 assert tools['class'] == 'Workflow', 'CWL Classes can only be named "Workflow" or "CommandLineTool'
                 for i in tools['inputs']:
                     workflowinputs.append("#%s/%s" % (tools['id'],i['id']))
+                    if i.get('synData',None) is not None:
+                        synId = i['synData']
+                #Check: synData must exist as an input (tarball of the index files)
+                if synId is None:
+                    raise ValueError("""Must have synData as a parameter in an input (This is the synapse ID of the tarball of your index files): ie.
+                                        -id: index
+                                        -type: File
+                                        -synData: syn12345
+                                     """)
+                else:
+                    indexFiles = syn.get(synId,downloadFile=False)
+                    acls = syn._getACL(indexFiles)
+                    for acl in acls['resourceAccess']:
+                        if acl['principalId'] == CHALLENGE_ADMIN_TEAM_ID:
+                            assert 'READ' in acl['accessType'], "At least View/READ access has to be given to the SMC_RNA_Admins Team: (Team ID: 3322844)"
+                #Check: Must contain these four inputs in workflow step
+                for i in ["TUMOR_FASTQ_1","TUMOR_FASTQ_2","TRUTH","GENE_ANNOTATIONS"]:
+                    required = "#%s/%s" % (tools['id'],i)
+                    assert required in workflowinputs, "Your workflow MUST contain at least these four inputs: 'TUMOR_FASTQ_1','TUMOR_FASTQ_2','TRUTH','GENE_ANNOTATIONS'"
                 for i in tools['steps']:
                     for y in i['outputs']:
                         workflowoutputs.append("#%s/%s/%s" %(tools['id'],i['id'],y['id']))
                     workflowinputs = workflowinputs + workflowoutputs
                     for y in i['inputs']:
-                        workflowsteps.append("%s/%s/%s" % ("input",i['run'][1:],y['id']))
+                        #Check: Workflow tool steps match the cwltools inputs
+                        steps = "%s/%s/%s" % ("input",i['run'][1:],y['id'])
+                        assert steps in cwltools, 'Your tool inputs do not match your workflow inputs'
+                        #Check: All sources used are included in the workflow inputs
                         if 'source' in y:
                             assert y['source'] in workflowinputs, 'Not all of your inputs in your workflow are mapped'
                 for i in tools['outputs']:
+                    #Check: All outputs have the correct sources mapped
                     if 'source' in i:
                         assert i['source'] in workflowoutputs, 'Your workflow output is not mapped correctly'
-        for i in workflowsteps:
-            assert i in cwltools, 'Your tool inputs do not match your workflow inputs'
         return 1
 
 
@@ -104,14 +127,7 @@ def give_synapse_permissions(syn, synapse_object, principal_id):
     acl = syn._getACL(synapse_object)
     acl['resourceAccess'].append({
         'principalId': principal_id,
-        'accessType': [
-            'CREATE',
-            'READ',
-            'SEND_MESSAGE',
-            'DOWNLOAD',
-            'UPDATE',
-            'UPDATE_SUBMISSION',
-            'READ_PRIVATE_SUBMISSION']})
+        'accessType': ['READ']})
     print "ACL", acl
     syn._storeACL(synapse_object, acl)
     return acl
@@ -128,8 +144,10 @@ def submit_workflow(syn, args):
     try:
         validate_workflow(syn, args)
         if args.projectId is None:
+            print "No projectId is specified, a project is being created"
             project = syn.store(Project("SMC-RNA-Challenge %s %s" % (syn.getUserProfile().userName, time.time())))
             args.projectId = project['id']
+            print "View your project here: https://www.synapse.org/#!Synapse:%s" % args.projectId
         CWL = syn.store(File(args.CWLfile, parent = project))
         print "Submitting workflow %s" % (CWL.name)
         submission = syn.submit(EVALUATION_QUEUE_ID, CWL, name=CWL.name, team=args.teamName)
@@ -137,7 +155,9 @@ def submit_workflow(syn, args):
     except Exception as e:
         print(e)
     ## When you submit, you grant permissions to the Admin team
-    #give_synapse_permissions(syn, syn.get(args.projectId), CHALLENGE_ADMIN_TEAM_ID)
+    give_synapse_permissions(syn, syn.get(args.projectId), CHALLENGE_ADMIN_TEAM_ID)
+    print("Administrator access granted to challenge admins")
+
 
 
 def merge(syn, args):
@@ -152,14 +172,14 @@ def merge(syn, args):
             raise ValueError("No secondary files to Merge")
         else:
             combined = []
-            #Dependencies
+            #Dependencies (CWLtools)
             for dep in data['secondaryFiles']:
                 depcwl = open(dep['path'][7:],"r")
                 docs = yaml.load(depcwl)
                 docs['id'] = str(os.path.basename(dep['path']))
                 del docs['cwlVersion']
                 combined.append(docs)
-            #Workflow
+            #Workflow (steps)
             workflow = open(data['path'][7:],"r")
             docs = yaml.load(workflow)
             del docs['cwlVersion']
@@ -182,7 +202,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Submit Files to the DREAM mutation calling challenge. Please see https://www.synapse.org/#!Synapse:syn312572/wiki/60703 for usage instructions.')
     #Stack.addJobTreeOptions(parser)
-    parser.add_argument("--synapse_email", help="Synapse UserName", default=None)
+    parser.add_argument("--synapse_user", help="Synapse UserName", default=None)
     parser.add_argument("--password", help="Synapse password", default=None)
 
     subparsers = parser.add_subparsers(title='commands',
@@ -213,8 +233,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     syn = synapseclient.Synapse()
-    if args.synapse_email is not None and args.synapse_key is not None:
-        syn.login(email=args.synapse_email, password=args.password,rememberMe=True)
+    if args.synapse_user is not None and args.password is not None:
+        print("You only need to provide credentials once then it will remember your login information")
+        syn.login(email=args.synapse_user, password=args.password,rememberMe=True)
     else:
         syn.login()
 
