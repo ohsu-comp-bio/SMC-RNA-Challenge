@@ -16,8 +16,8 @@ def validate(args):
 			errors.close()
 
 def evaluate(args):
-	if os.path.basename(args.inputbedpe) == "error.log":
-		os.system("cat %s > error.log" % args.inputbedpe)
+	if args.error is not None:
+		os.system("cat %s > error.log" % args.error)
 	else:
 		evaluate = subprocess.Popen(["fusionToolEvaluator", "-t", args.truthfile,"-r",args.inputbedpe,"-g", args.gtf,"-s","/opt/SMC-RNA-Challenge/FusionEvaluator/rulefile.txt","-o",args.outputbedpe], stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 		out = evaluate.stdout.read()
@@ -41,8 +41,10 @@ subparsers = parser.add_subparsers(title='commands',
 #Evaluate bedpe
 parser_evaluate = subparsers.add_parser('evaluate',
 		help='evaluates input bedpe')
-parser_evaluate.add_argument('--inputbedpe',  metavar='fusion.bedpe', type=str, required=True,
+parser_evaluate.add_argument('--inputbedpe',  metavar='fusion.bedpe', type=str, default=None,
 		help='result bedpe'),
+parser_evaluate.add_argument('--error',  metavar='error.log', type=str, default=None,
+		help='error log'),
 parser_evaluate.add_argument('--outputbedpe', metavar='fusionout.bedpe', type=str, required=True,
 		help='output bedpe')
 parser_evaluate.add_argument('--truthfile', metavar='truth.bedpe', type=str, required=True,
