@@ -120,7 +120,7 @@ def validate_workflow(syn,args):
                     #Check: All outputs have the correct sources mapped
                     if 'source' in i:
                         assert i['source'] in workflowoutputs, 'Your workflow output is not mapped correctly'
-        return 1
+    return 1
 
 
 def give_synapse_permissions(syn, synapse_object, principal_id):
