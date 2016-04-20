@@ -6,10 +6,6 @@ RUN apt-get install -y git build-essential cmake gcc python
 
 WORKDIR /opt
 
-#Install converter
-RUN git clone https://github.com/Sage-Bionetworks/SMC-RNA-Examples.git && \
-	cp SMC-RNA-Examples/tophat/script/convert_tophat_to_bedpe.py /usr/local/bin/
-
 #Install evaluator, validator
 RUN git clone https://github.com/Sage-Bionetworks/SMC-RNA-Challenge.git && \
 	cd SMC-RNA-Challenge && \
