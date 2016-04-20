@@ -4,13 +4,16 @@ FROM ubuntu:14.04
 RUN apt-get -y update
 RUN apt-get install -y git build-essential cmake gcc python
 
-#Install converter, evaluator, validator
 WORKDIR /opt
+
+#Install converter
+RUN git clone https://github.com/Sage-Bionetworks/SMC-RNA-Examples.git && \
+	cp SMC-RNA-Examples/tophat/script/convert_tophat_to_bedpe.py /usr/local/bin/
+
+#Install evaluator, validator
 RUN git clone https://github.com/Sage-Bionetworks/SMC-RNA-Challenge.git && \
-    git clone https://github.com/Sage-Bionetworks/SMC-RNA-Examples.git && \
 	cd SMC-RNA-Challenge && \
-	cp challenge/evaluation.py /usr/local/bin/ && \
-	cp ../SMC-RNA-Examples/tophat/script/convert_tophat_to_bedpe.py /usr/local/bin/ && \
+	cp script/evaluation.py /usr/local/bin/ && \
 	mkdir build && \
 	cd build && \
 	cmake ../FusionEvaluator/ -DCMAKE_BUILD_TYPE=release && \
