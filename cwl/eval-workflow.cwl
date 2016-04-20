@@ -38,7 +38,7 @@ outputs:
 steps:
 
   - id: validator
-    run: ../validator.cwl
+    run: validator.cwl
     inputs:
     - {id: inputbedpe, source: "#inputbedpe"}
     - {id: outputbedpe, source: "#outputbedpe"}
@@ -47,7 +47,7 @@ steps:
     - {id: errorlog}
 
   - id: evaluator
-    run: ../evaluator.cwl
+    run: evaluator.cwl
     inputs:
     - {id: inputbedpe, source: "#validator/validatoroutput"}
     - {id: error, source: "#validator/errorlog"}
