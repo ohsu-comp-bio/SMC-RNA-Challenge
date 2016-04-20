@@ -4,12 +4,14 @@
 ##
 ##-----------------------------------------------------------------------------
 
-
+import synapseclient
+import subprocess
+import yaml
 ## A Synapse project will hold the assetts for your challenge. Put its
 ## synapse ID here, for example
 ## CHALLENGE_SYN_ID = "syn1234567"
 CHALLENGE_SYN_ID = "syn2813589"
-
+CHALLENGE_ADMIN_TEAM_ID = 3322844
 ## Name of your challenge, defaults to the name of the challenge's project
 CHALLENGE_NAME = "SMC-RNA Challenge"
 
@@ -67,7 +69,77 @@ for q in evaluation_queues:
 leaderboard_tables = {}
 
 
-def validate(evaluation,submission):
+def validate_1(evaluation,submission):
+    return (True,"Passed validation!")
+
+def validate_2(evaluation,submission,syn):
+    try:
+        test = subprocess.check_call(["cwltool", "--non-strict", "--print-pre", submission])
+    except Exception as e:
+        raise ValueError("Your CWL file is not formatted correctly",e)
+
+    print "Checking Workflow"
+    with open(submission,"r") as cwlfile:
+        try:
+            docs = yaml.load(cwlfile)
+        except Exception as e:
+            raise Exception("Must be a CWL file (Yaml format)")
+
+    assert docs['cwlVersion'] == 'cwl:draft-3'
+    if docs.get('$graph',None) is None:
+        raise ValueError("Please run 'python smc_rna_submit.py merge --CWLfile %s'" % submission)
+    else:
+        requiredInputs = []
+        cwltools = []
+        workflowinputs = []
+        workflowoutputs = []
+        merged = docs['$graph']
+        synId = None
+        for tools in merged:
+            if tools['class'] == 'CommandLineTool':
+                for i in tools['inputs']:
+                    cwltools.append("%s/%s/%s" % ("input",tools['id'],i['id']))
+                for i in tools['outputs']:
+                    cwltools.append("%s/%s/%s" % ("output",tools['id'],i['id']))
+            else:
+                #Check: Workflow class
+                assert tools['class'] == 'Workflow', 'CWL Classes can only be named "Workflow" or "CommandLineTool'
+                for i in tools['inputs']:
+                    workflowinputs.append("#%s/%s" % (tools['id'],i['id']))
+                    if i.get('synData',None) is not None:
+                        synId = i['synData']
+                #Check: synData must exist as an input (tarball of the index files)
+                if synId is None:
+                    raise ValueError("""Must have synData as a parameter in an input (This is the synapse ID of the tarball of your index files): ie.
+                                        -id: index
+                                        -type: File
+                                        -synData: syn12345
+                                     """)
+                else:
+                    indexFiles = syn.get(synId,downloadFile=False)
+                    acls = syn._getACL(indexFiles)
+                    for acl in acls['resourceAccess']:
+                        if acl['principalId'] == CHALLENGE_ADMIN_TEAM_ID:
+                            assert 'READ' in acl['accessType'], "At least View/READ access has to be given to the SMC_RNA_Admins Team: (Team ID: 3322844)"
+                #Check: Must contain these four inputs in workflow step
+                for i in ["TUMOR_FASTQ_1","TUMOR_FASTQ_2","TRUTH","GENE_ANNOTATIONS"]:
+                    required = "#%s/%s" % (tools['id'],i)
+                    assert required in workflowinputs, "Your workflow MUST contain at least these four inputs: 'TUMOR_FASTQ_1','TUMOR_FASTQ_2','TRUTH','GENE_ANNOTATIONS'"
+                for i in tools['steps']:
+                    for y in i['outputs']:
+                        workflowoutputs.append("#%s/%s/%s" %(tools['id'],i['id'],y['id']))
+                    workflowinputs = workflowinputs + workflowoutputs
+                    for y in i['inputs']:
+                        #Check: Workflow tool steps match the cwltools inputs
+                        steps = "%s/%s/%s" % ("input",i['run'][1:],y['id'])
+                        assert steps in cwltools, 'Your tool inputs do not match your workflow inputs'
+                        #Check: All sources used are included in the workflow inputs
+                        if 'source' in y:
+                            assert y['source'] in workflowinputs, 'Not all of your inputs in your workflow are mapped'
+                for i in tools['outputs']:
+                    #Check: All outputs have the correct sources mapped
+                    if 'source' in i:
+                        assert i['source'] in workflowoutputs, 'Your workflow output is not mapped correctly'
     return (True,"Passed validation!")
 
 
@@ -78,9 +150,16 @@ def score(evaluation,submission):
 config_evaluations = [
 
     {
+        'id':5952651,
+        'score_as_part_of_challenge': False,
+        'validation_function': validate_1,
+        'scoring_function': score,
+
+    },
+    {
         'id':5877348,
         'score_as_part_of_challenge': False,
-        'validation_function': validate,
+        'validation_function': validate_2,
         'scoring_function': score,
 
     }
@@ -98,8 +177,8 @@ def validate_submission(evaluation, submission):
     """
     config = config_evaluations_map[int(evaluation.id)]
     validation_func = config['validation_function']
-
-    results = validation_func(evaluation,submission)
+    syn = synapseclient.login()
+    results = validation_func(evaluation,submission.filePath,syn)
     return results
 
 
@@ -113,7 +192,7 @@ def score_submission(evaluation, submission):
     config = config_evaluations_map[int(evaluation.id)]
     scoring_func = config['scoring_function']
 
-    results = scoring_func(evaluation,submission)
+    results = scoring_func(evaluation,submission.filePath)
     return results
 
 
