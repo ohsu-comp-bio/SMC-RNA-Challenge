@@ -19,7 +19,7 @@ def evaluate(args):
 	if os.path.basename(args.inputbedpe) == "error.log":
 		os.system("cat %s > error.log" % args.inputbedpe)
 	else:
-		evaluate = subprocess.Popen(["fusionToolEvaluator", "-t", args.truthfile,"-r",args.inputbedpe,"-g", args.gtf,"-s",args.rulefile,"-o",args.outputbedpe], stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+		evaluate = subprocess.Popen(["fusionToolEvaluator", "-t", args.truthfile,"-r",args.inputbedpe,"-g", args.gtf,"-s","/opt/SMC-RNA-Challenge/FusionEvaluator/rulefile.txt","-o",args.outputbedpe], stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 		out = evaluate.stdout.read()
 		error = evaluate.stderr.read()
 
@@ -47,8 +47,6 @@ parser_evaluate.add_argument('--outputbedpe', metavar='fusionout.bedpe', type=st
 		help='output bedpe')
 parser_evaluate.add_argument('--truthfile', metavar='truth.bedpe', type=str, required=True,
 		help='truth file')
-parser_evaluate.add_argument('--rulefile', metavar='rulefile.txt', type=str, required=True,
-		help='rule file')
 parser_evaluate.add_argument('--gtf', help='Gene annotation file', metavar='ensemble.hg19.txt',type=str,required=True)
 parser_evaluate.set_defaults(func=evaluate)
 
