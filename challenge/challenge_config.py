@@ -131,15 +131,16 @@ def validate_2(evaluation,submission,syn):
                     workflowinputs = workflowinputs + workflowoutputs
                     for y in i['inputs']:
                         #Check: Workflow tool steps match the cwltools inputs
-                        steps = "%s/%s/%s" % ("input",i['run'][1:],y['id'])
+                        steps = "%s/%s/%s" % ("input",os.path.basename(i['run'][1:]),y['id'])
                         assert steps in cwltools, 'Your tool inputs do not match your workflow inputs'
                         #Check: All sources used are included in the workflow inputs
                         if 'source' in y:
                             assert y['source'] in workflowinputs, 'Not all of your inputs in your workflow are mapped'
                 for i in tools['outputs']:
+                    assert i['id'] == 'FUSION_OUTPUT', "Your workflow output id must be FUSION_OUTPUT"
                     #Check: All outputs have the correct sources mapped
                     if 'source' in i:
-                        assert i['source'] in workflowoutputs, 'Your workflow output is not mapped correctly'
+                        assert i['source'] in workflowoutputs, 'Your workflow output is not mapped correctly to your tools'
     return (True,"Passed validation!")
 
 
