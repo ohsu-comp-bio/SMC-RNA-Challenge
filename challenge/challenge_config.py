@@ -122,9 +122,9 @@ def validate_2(evaluation,submission,syn):
                         if acl['principalId'] == CHALLENGE_ADMIN_TEAM_ID:
                             assert 'READ' in acl['accessType'], "At least View/READ access has to be given to the SMC_RNA_Admins Team: (Team ID: 3322844)"
                 #Check: Must contain these four inputs in workflow step
-                for i in ["TUMOR_FASTQ_1","TUMOR_FASTQ_2","TRUTH","GENE_ANNOTATIONS"]:
+                for i in ["TUMOR_FASTQ_1","TUMOR_FASTQ_2"]:
                     required = "#%s/%s" % (tools['id'],i)
-                    assert required in workflowinputs, "Your workflow MUST contain at least these four inputs: 'TUMOR_FASTQ_1','TUMOR_FASTQ_2','TRUTH','GENE_ANNOTATIONS'"
+                    assert required in workflowinputs, "Your workflow MUST contain at least these four inputs: 'TUMOR_FASTQ_1','TUMOR_FASTQ_2'"
                 for i in tools['steps']:
                     for y in i['outputs']:
                         workflowoutputs.append("#%s/%s/%s" %(tools['id'],i['id'],y['id']))
