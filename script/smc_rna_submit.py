@@ -150,7 +150,7 @@ def submit_workflow(syn, args):
     args.CWLfile = merge(syn, args)
     try:
         validate_workflow(syn, args)
-        print("\n\n###SUBMITTING MERGED WORKFLOW###\n\n")
+        print("\n\n###SUBMITTING MERGED WORKFLOW: %s###\n\n" % args.CWLfile)
         if args.projectId is None:
             print "No projectId is specified, a project is being created"
             project = syn.store(Project("SMC-RNA-Challenge %s %s" % (syn.getUserProfile().userName, time.time())))
