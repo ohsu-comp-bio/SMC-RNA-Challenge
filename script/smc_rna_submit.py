@@ -173,19 +173,20 @@ def merge(syn, args):
     CWLfile = os.path.basename(args.CWLfile)
 
     fileName = CWLfile.split(".")[0]
-    outputDirectory = os.path.join("/".join(os.path.abspath(args.CWLfile).split("/")[:-1]),"submission_files")
+    workflowPath = "/".join(os.path.abspath(args.CWLfile).split("/")[:-1])
+    outputDirectory = os.path.join(workflowPath,"submission_files")
     fileName = name_clean(fileName)
-    print(fileName)
     try:
         os.mkdir(outputDirectory)
     except Exception as e:
         print(e)
-    print(args.CWLfile)
+
     workflowjson = "%s_dep.json" % os.path.join(outputDirectory,fileName)
     os.system('cwltool --print-deps "%s" > %s' % (args.CWLfile,workflowjson))
 
     workflow = open(args.CWLfile)
     docs = yaml.load(workflow)
+
     #If CWL workflow isn't merged, then merge them
     if "$graph" not in docs:
         with open(workflowjson) as data_file:    
@@ -196,13 +197,13 @@ def merge(syn, args):
                 combined = []
                 #Dependencies (CWLtools)
                 for dep in data['secondaryFiles']:
-                    depcwl = open(dep['path'][7:],"r")
+                    depcwl = open(os.path.join(workflowPath,dep['path']),"r")
                     docs = yaml.load(depcwl)
                     docs['id'] = str(os.path.basename(dep['path']))
                     del docs['cwlVersion']
                     combined.append(docs)
                 #Workflow (steps)
-                workflow = open(data['path'][7:],"r")
+                workflow = open(os.path.join(workflowPath,data['path']),"r")
                 docs = yaml.load(workflow)
                 del docs['cwlVersion']
                 docs['id'] = str(os.path.basename(data['path']))
@@ -223,6 +224,7 @@ def merge(syn, args):
         shutil.copy(args.CWLfile, os.path.join(outputDirectory,fileName))
         print("CWL files are already merged")
     os.remove(workflowjson)
+    print("Merged workflow: %s" % os.path.join(outputDirectory,fileName))
     return(args.CWLfile)
 
 
