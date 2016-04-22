@@ -131,7 +131,7 @@ def give_synapse_permissions(syn, synapse_object, principal_id):
     acl['resourceAccess'].append({
         'principalId': principal_id,
         'accessType': ['READ']})
-    print "ACL", acl
+    #print "ACL", acl
     syn._storeACL(synapse_object, acl)
     return acl
 
