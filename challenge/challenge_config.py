@@ -131,7 +131,7 @@ def validate_2(evaluation,submission,syn):
                     workflowinputs = workflowinputs + workflowoutputs
                     for y in i['inputs']:
                         #Check: Workflow tool steps match the cwltools inputs
-                        steps = "%s/%s/%s" % ("input",os.path.basename(i['run'][1:]),y['id'])
+                        steps = "%s/%s/%s" % ("input",i['run'][1:],y['id'])
                         assert steps in cwltools, 'Your tool inputs do not match your workflow inputs'
                         #Check: All sources used are included in the workflow inputs
                         if 'source' in y:
