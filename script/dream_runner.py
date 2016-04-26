@@ -1,4 +1,6 @@
+import os
 import yaml
+import shutil
 import argparse
 import subprocess
 import synapseclient
@@ -36,21 +38,24 @@ def call_cwl(tool, inputs):
     arguments = ["cwl-runner", "--non-strict", tool].extend(inputs)
     subprocess.check_call(arguments)    
 
-def call_workflow(fastq1, fastq2, index_path):
+def call_workflow(cwl, fastq1, fastq2, index_path):
     inputs = ["--index", index_path,
               "--TUMOR_FASTQ_1", fastq1,
               "--TUMOR_FASTQ_2", fastq2]
 
-    call_cwl("workflow.cwl", inputs)
+    call_cwl(cwl, inputs)
 
-def call_evaluation(truth, annotation):
+def call_evaluation(cwl, truth, annotation):
+    local = "eval-workflow.cwl"
+    shutil.copyfile(cwl, local)
     inputs = ["--inputbedpe", "filtered_fusion.bedpe",
               "--outputbedpe", "valid.bedpe",
               "--truthfile", truth,
               "--evaloutput", "result.out",
               "--geneAnnotationFile", annotation]
 
-    call_cwl("eval-workflow.cwl", inputs)
+    call_cwl(local, inputs)
+    os.remove(local)
 
 def run_dream(synapse, args):
     cwlpath = args.cwl_file
@@ -61,14 +66,15 @@ def run_dream(synapse, args):
     print("SYNAPSE: " + synapse_id)
 
     index = synapse.get(synapse_id)
-    call_workflow(args.fastq1, args.fastq2, index.path)
-    call_evaluation(args.truth, args.annotation)
+    call_workflow(args.workflow_cwl, args.fastq1, args.fastq2, index.path)
+    call_evaluation(args.eval_cwl, args.truth, args.annotation)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='DREAM runner - run your workflow from beginning to end.')
     parser.add_argument('--synapse-user', help='synapse Username', default=None)
     parser.add_argument('--synapse-password', help='synapse password', default=None)
-    parser.add_argument('--cwl-file',  default='workflow/smc-tophat-workflow.cwl', type=str, help='cwl workflow file')
+    parser.add_argument('--workflow-cwl',  default='workflow/smc-tophat-workflow.cwl', type=str, help='cwl workflow file')
+    parser.add_argument('--eval-cwl',  default='../SMC-RNA-Challenge/cwl/eval-workflow.cwl', type=str, help='cwl workflow file')
 
     parser.add_argument('--fastq1', default='sim1a_30m_merged_1.fq.gz')
     parser.add_argument('--fastq2', default='sim1a_30m_merged_2.fq.gz')
