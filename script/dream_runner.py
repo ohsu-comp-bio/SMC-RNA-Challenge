@@ -58,7 +58,7 @@ def call_evaluation(cwl, truth, annotation):
     os.remove(local)
 
 def run_dream(synapse, args):
-    cwlpath = args.cwl_file
+    cwlpath = args.workflow_cwl
     validate_cwl(cwlpath)
     cwl = load_cwl(cwlpath)
     synapse_id = find_synapse_data(cwl)
