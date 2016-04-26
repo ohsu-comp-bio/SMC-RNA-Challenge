@@ -66,7 +66,7 @@ def run_dream(synapse, args):
     print("SYNAPSE: " + synapse_id)
 
     index = synapse.get(synapse_id)
-    call_workflow(args.workflow_cwl, args.fastq1, args.fastq2, index.path)
+    call_workflow(args.workflow_cwl, args.fastq1, args.fastq2, index.name)
     call_evaluation(args.eval_cwl, args.truth, args.annotation)
 
 if __name__ == '__main__':
