@@ -35,7 +35,8 @@ def find_synapse_data(cwl):
     return input['synData']
 
 def call_cwl(tool, inputs):
-    arguments = ["cwl-runner", "--non-strict", tool].extend(inputs)
+    arguments = ["cwl-runner", "--non-strict", tool]
+    arguments.extend(inputs)
     subprocess.check_call(arguments)    
 
 def call_workflow(cwl, fastq1, fastq2, index_path):
