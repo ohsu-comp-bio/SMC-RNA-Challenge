@@ -68,7 +68,7 @@ def run_dream(synapse, args):
 
     index = synapse.get(synapse_id)
     call_workflow(args.workflow_cwl, args.fastq1, args.fastq2, index.path)
-    call_evaluation(args.eval_cwl, args.truth, args.annotation)
+    call_evaluation(args.eval_cwl, args.truth, args.annotations)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='DREAM runner - run your workflow from beginning to end.')
