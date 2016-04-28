@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import os
 import yaml
 import shutil
@@ -46,14 +48,14 @@ def call_workflow(cwl, fastq1, fastq2, index_path):
 
     call_cwl(cwl, inputs)
 
-def call_evaluation(cwl, truth, annotation):
+def call_evaluation(cwl, truth, annotations):
     local = "eval-workflow.cwl"
     shutil.copyfile(cwl, local)
     inputs = ["--inputbedpe", "filtered_fusion.bedpe",
               "--outputbedpe", "valid.bedpe",
               "--truthfile", truth,
               "--evaloutput", "result.out",
-              "--geneAnnotationFile", annotation]
+              "--geneAnnotationFile", annotations]
 
     call_cwl(local, inputs)
     os.remove(local)
