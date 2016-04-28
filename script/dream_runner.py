@@ -37,7 +37,12 @@ def find_synapse_data(cwl):
     return input['synData']
 
 def call_cwl(tool, inputs):
-    arguments = ["cwl-runner", "--non-strict", tool]
+    arguments = ["cwl-runner",
+                 "--non-strict",
+                 "--cache-intermediate-outputs",
+                 "--tmpdir-prefix", "/data/tmp",
+                 "--tmp-outdir-prefix", "/data/tmp",
+                 tool]
     arguments.extend(inputs)
     subprocess.check_call(arguments)    
 
