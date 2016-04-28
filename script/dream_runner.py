@@ -40,8 +40,8 @@ def call_cwl(tool, inputs):
     arguments = ["cwl-runner",
                  "--non-strict",
                  "--cache-intermediate-output",
-                 "--tmpdir-prefix", "/data/tmp",
-                 "--tmp-outdir-prefix", "/data/tmp",
+                 # "--tmpdir-prefix", "/data/tmp",
+                 # "--tmp-outdir-prefix", "/data/tmp",
                  tool]
     arguments.extend(inputs)
     subprocess.check_call(arguments)    
@@ -73,7 +73,8 @@ def run_dream(synapse, args):
 
     print("SYNAPSE: " + synapse_id)
 
-    index = synapse.get(synapse_id, downloadLocation="/data")
+    # index = synapse.get(synapse_id, downloadLocation="/data")
+    index = synapse.get(synapse_id)
     call_workflow(args.workflow_cwl, args.fastq1, args.fastq2, index.path)
     call_evaluation(args.eval_cwl, args.truth, args.annotations)
 
@@ -84,8 +85,8 @@ if __name__ == '__main__':
     parser.add_argument('--workflow-cwl',  default='workflow/smc-tophat-workflow.cwl', type=str, help='cwl workflow file')
     parser.add_argument('--eval-cwl',  default='../SMC-RNA-Challenge/cwl/eval-workflow.cwl', type=str, help='cwl workflow file')
 
-    parser.add_argument('--fastq1', default='/data/sim1a_30m_merged_1.fq.gz')
-    parser.add_argument('--fastq2', default='/data/sim1a_30m_merged_2.fq.gz')
+    parser.add_argument('--fastq1', default='sim1a_30m_merged_1.fq.gz')
+    parser.add_argument('--fastq2', default='sim1a_30m_merged_2.fq.gz')
     parser.add_argument('--truth', default='input/truth.bedpe')
     parser.add_argument('--annotations', default='input/ensembl.hg19.txt')
                         
