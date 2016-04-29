@@ -54,16 +54,16 @@ def call_workflow(cwl, fastq1, fastq2, index_path):
     call_cwl(cwl, inputs)
 
 def call_evaluation(cwl, truth, annotations):
-    local = "eval-workflow.cwl"
-    shutil.copyfile(cwl, local)
+    # local = "eval-workflow.cwl"
+    # shutil.copyfile(cwl, local)
     inputs = ["--inputbedpe", "filtered_fusion.bedpe",
               "--outputbedpe", "valid.bedpe",
               "--truthfile", truth,
               "--evaloutput", "result.out",
               "--geneAnnotationFile", annotations]
 
-    call_cwl(local, inputs)
-    os.remove(local)
+    call_cwl(cwl, inputs)
+    # os.remove(local)
 
 def run_dream(synapse, args):
     cwlpath = args.workflow_cwl
