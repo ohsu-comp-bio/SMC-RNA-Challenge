@@ -5,7 +5,7 @@ import argparse
 import subprocess
 
 def validate(args):
-	val = subprocess.Popen(["python","/opt/SMC-RNA-Challenge/Validator/bedpeValidator.py", "-s", "-c", "/opt/SMC-RNA-Challenge/Validator/GRCh37.chromosome.strict.txt", "-i",args.inputbedpe , "-o", args.outputbedpe], stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+	val = subprocess.Popen(["python","/opt/SMC-RNA-Challenge/FusionDetection/Validator/bedpeValidator.py", "-s", "-c", "/opt/SMC-RNA-Challenge/FusionDetection/Validator/GRCh37.chromosome.strict.txt", "-i",args.inputbedpe , "-o", args.outputbedpe], stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 	out = val.stdout.read()
 	error = val.stderr.read()
 	if out != '' or error != '':
@@ -19,7 +19,7 @@ def evaluate(args):
 	if args.error is not None:
 		os.system("cat %s > error.log" % args.error)
 	else:
-		evaluate = subprocess.Popen(["fusionToolEvaluator", "-t", args.truthfile,"-r",args.inputbedpe,"-g", args.gtf,"-s","/opt/SMC-RNA-Challenge/FusionEvaluator/rulefile.txt","-o",args.outputbedpe], stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+		evaluate = subprocess.Popen(["fusionToolEvaluator", "-t", args.truthfile,"-r",args.inputbedpe,"-g", args.gtf,"-s","/opt/SMC-RNA-Challenge/FusionDetection/Evaluator/rulefile.txt","-o",args.outputbedpe], stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 		out = evaluate.stdout.read()
 		error = evaluate.stderr.read()
 
