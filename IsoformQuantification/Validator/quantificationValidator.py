@@ -51,6 +51,9 @@ def getAllTranscriptNames():
         line=f.readline()
         if line=="":
             break
+        #GTF files have comments
+        elif line[0] == "#":
+            tmp = ""
         else:
             tmp=line.split("\t")
             tmp2=tmp[8].split(" ")
@@ -73,10 +76,14 @@ transcripts_used = defaultdict(lambda: 0)
 def valideRecord():
     infile = "%s" % inFile
     f=open(infile,"r")
+    #First line is headers
+    num = 0
     while True:
         line=f.readline()
         if line=="":
             break
+        elif num==0:
+            num = num+1
         else:
             tmp=line.split("\t")
             if len(tmp)!=2:
@@ -93,6 +100,7 @@ def valideRecord():
                 sys.exit(1)
             if isFloat(value):
                 transcripts_used[name]=1
+            num = num+1
 
 
 def main(argv):
