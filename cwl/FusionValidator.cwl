@@ -5,15 +5,13 @@ cwlVersion: "cwl:draft-3"
 class: CommandLineTool
 
 description: |
-  evaluation is developed for SMC-RNA Challenge
-  Original tool usage: #update tool usage
+  Validation of Fusion Detection Challenge
 
 requirements:
   - class: InlineJavascriptRequirement
   - class: DockerRequirement
     dockerPull: dreamchallenge/smcrna-functions
 
-# The position determines where the commands are placed in command line
 inputs:
   
   - id: inputbedpe

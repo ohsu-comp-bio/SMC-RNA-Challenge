@@ -1,6 +1,6 @@
 #!/usr/bin/env cwl-runner
 #
-# Author: thomas.yu@sagebase.org
+# Authors: Thomas Yu, Ryan Spangler, Kyle Ellrott
 
 class: Workflow
 
@@ -38,7 +38,7 @@ outputs:
 steps:
 
   - id: validator
-    run: validator.cwl
+    run: FusionValidator.cwl
     inputs:
     - {id: inputbedpe, source: "#inputbedpe"}
     - {id: outputbedpe, source: "#outputbedpe"}
@@ -47,7 +47,7 @@ steps:
     - {id: errorlog}
 
   - id: evaluator
-    run: evaluator.cwl
+    run: FusionEvaluator.cwl
     inputs:
     - {id: inputbedpe, source: "#validator/validatoroutput"}
     - {id: error, source: "#validator/errorlog"}
