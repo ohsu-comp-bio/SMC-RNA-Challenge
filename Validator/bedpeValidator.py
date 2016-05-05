@@ -216,14 +216,15 @@ def remove_duplicate():
                 if out_data[i][0]==out_data[i-1][0] and out_data[i][3]==out_data[i-1][3] and out_data[i][8]==out_data[i-1][8] and out_data[i][9]==out_data[i-1][9]:
                     delta1=0
                     delta2=0
+                    lenRow=len(out_data[i])
                     if out_data[i][8]=="+":
-                        delta1 = out_data[i][10]-out_data[i-1][10]
+                        delta1 = out_data[i][lenRow-2]-out_data[i-1][lenRow-2]
                     else:
-                        delta1 = out_data[i-1][10]-out_data[i][10]
+                        delta1 = out_data[i-1][lenRow-2]-out_data[i][lenRow-2]
                     if out_data[i][9]=="+":
-                        delta2 = out_data[i][11]-out_data[i-1][11]
+                        delta2 = out_data[i][lenRow-1]-out_data[i-1][lenRow-1]
                     else:
-                        delta2 = out_data[i-1][11]-out_data[i][11]
+                        delta2 = out_data[i-1][lenRow-1]-out_data[i][lenRow-1]
                     if delta1 !=delta2:
                         out_data_2.append(out_data[i])
                 else:
