@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
 import os
+import sys
 import argparse
 import subprocess
 
@@ -29,6 +30,7 @@ def evaluateIsoformQuant(args):
 	except Exception as e:
 		val = e
 		print(val)
+		sys.stdout.write(val)
 		# with open("error.log",'w') as errors:
 		# 	errors.write("Error!\n")
 		# 	errors.write(out+"\n")
@@ -36,6 +38,7 @@ def evaluateIsoformQuant(args):
 		# 	errors.close()
 	if val == 0:
 		print("Success")
+		sys.stdout.write("Success")
 		#evaluate = subprocess.check_call(["./quantificationEvaluator", "-t", args.truth, "-i", args.input])
 		# with open("score.txt",'w') as errors:
 		# 	errors.write("Error!\n")
