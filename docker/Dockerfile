@@ -9,7 +9,7 @@ WORKDIR /opt
 #Install evaluators, and validators
 RUN git clone https://github.com/Sage-Bionetworks/SMC-RNA-Challenge.git && \
 	cd SMC-RNA-Challenge && \
-	cp FusionDetection/script/evaluation.py /usr/local/bin/ && \
+	cp script/evaluation.py /usr/local/bin/ && \
 	cp FusionDetection/Validator/bedpeValidatorS.py /usr/local/bin && \
 	cp IsoformQuantification/Validator/quantificationValidator.py /usr/local/bin && \
 	cp IsoformQuantification/Evaluator/quantificationEvaluator.py /usr/local/bin && \
