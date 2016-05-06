@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+
 import sys
 import os
 import math
@@ -86,6 +88,7 @@ def valideRecord():
             num = num+1
         else:
             tmp=line.split("\t")
+            line=line[0:len(line)-1]
             if len(tmp)!=2:
                 line=line[0:len(line)-1]
                 print "Line with not 2 fields: >>>> ", line, " <<<<.",
