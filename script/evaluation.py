@@ -85,10 +85,10 @@ parser_validate.set_defaults(func=validate)
 
 parser_evaluateIsoformQuant = subparsers.add_parser('evaluateIsoformQuant',
 		help='validates and evaluates isoform quantification challenge')
-parser_evaluate.add_argument('--gtf', help='Gene annotation file', metavar='ensemble.hg19.txt',type=str,required=True)
-parser_validate.add_argument('--input',  metavar='results.out', type=str, required=True,
+parser_evaluateIsoformQuant.add_argument('--gtf', help='Gene annotation file', metavar='ensemble.hg19.txt',type=str,required=True)
+parser_evaluateIsoformQuant.add_argument('--input',  metavar='results.out', type=str, required=True,
 		help='transcriptId, TPM'),
-parser_validate.set_defaults(func=evaluateIsoformQuant)
+parser_evaluateIsoformQuant.set_defaults(func=evaluateIsoformQuant)
 
 #Parse args
 args = parser.parse_args()
