@@ -29,22 +29,12 @@ def evaluateIsoformQuant(args):
 		val = subprocess.check_call(["./quantificationValidator.py", "-g", args.gtf, "-i", args.input])
 	except Exception as e:
 		val = e
-		print(val)
-		sys.stdout.write(val)
-		# with open("error.log",'w') as errors:
-		# 	errors.write("Error!\n")
-		# 	errors.write(out+"\n")
-		# 	errors.write(error)
-		# 	errors.close()
 	if val == 0:
-		print("Success")
-		sys.stdout.write("Success")
+		val = "sucess"
 		#evaluate = subprocess.check_call(["./quantificationEvaluator", "-t", args.truth, "-i", args.input])
-		# with open("score.txt",'w') as errors:
-		# 	errors.write("Error!\n")
-		# 	errors.write(out+"\n")
-		# 	errors.write(error)
-		# 	errors.close()
+	with open("result.out",'w') as results:
+		results.write(val)
+		results.close()
 
 
 
