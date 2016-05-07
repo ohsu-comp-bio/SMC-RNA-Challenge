@@ -33,7 +33,7 @@ def evaluateFusionDet(args):
 		evaluate = subprocess.check_call(["fusionToolEvaluator", "-t", args.truth,"-r",args.input,"-g", args.gtf,"-s","/opt/SMC-RNA-Challenge/FusionDetection/Evaluator/rulefile.txt","-o","result.out"])
 	else:
 		with open("result.out",'w') as results:
-			results.write(e)
+			results.write(val)
 			results.close()
 
 
