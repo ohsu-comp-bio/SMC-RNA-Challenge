@@ -18,8 +18,14 @@ inputs:
     inputBinding:
       prefix: --input
       position: 1
-
-  - id: geneAnnotationFile
+  
+  - id: truth
+    type: File
+    inputBinding:
+      prefix: --truth
+      position: 1
+  
+  - id: gtf
     type: File
     inputBinding:
       prefix: --gtf

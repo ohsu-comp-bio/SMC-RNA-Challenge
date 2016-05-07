@@ -13,19 +13,19 @@ requirements:
 
 inputs:
 
-  - id: truthfile
+  - id: truth
     type: File
     inputBinding:
       prefix: --truth
       position: 1
   
-  - id: inputbedpe
+  - id: input
     type: File
     inputBinding:
       prefix: --input
       position: 1
 
-  - id: geneAnnotationFile
+  - id: gtf
     type: File
     inputBinding:
       prefix: --gtf
