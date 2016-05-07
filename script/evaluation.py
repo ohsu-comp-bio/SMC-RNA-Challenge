@@ -43,8 +43,7 @@ def evaluateIsoformQuant(args):
 	except Exception as e:
 		val = str(e)
 	if val == 0:
-		val = "success"
-		#evaluate = subprocess.check_call(["quantificationEvaluator", "-t", args.truth, "-i", args.input])
+		val = subprocess.check_call(["quantificationEvaluator", "-t", args.truth, "-i", args.input])
 	with open("result.out",'w') as results:
 		results.write(val)
 		results.close()

@@ -80,8 +80,9 @@ def getBothValues():
 
 def calculateCor():
     cor,p_value=stats.spearmanr(truth_values,input_values)
-    print "spearman\tp-value" 
-    print("%s\t%s" % (cor,p_value))
+    final = "spearman\tp-value\n%s\t%s" % (cor,p_value)
+    print(final)
+    return(final)
 
 def main(argv):
     getParameters(argv[1:])
@@ -92,8 +93,8 @@ def main(argv):
     getBothValues()
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        calculateCor()
-    return 0
+        final = calculateCor()
+    return(final)
     
 if __name__ == '__main__':
     sys.exit(main(sys.argv))
