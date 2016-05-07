@@ -28,9 +28,9 @@ def evaluateIsoformQuant(args):
 	try:
 		val = subprocess.check_call(["./quantificationValidator.py", "-g", args.gtf, "-i", args.input])
 	except Exception as e:
-		val = e
+		val = str(e)
 	if val == 0:
-		val = "sucess"
+		val = "success"
 		#evaluate = subprocess.check_call(["./quantificationEvaluator", "-t", args.truth, "-i", args.input])
 	with open("result.out",'w') as results:
 		results.write(val)
