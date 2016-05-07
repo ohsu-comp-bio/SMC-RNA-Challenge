@@ -5,6 +5,7 @@ RUN apt-get -y update
 RUN apt-get install -y git build-essential cmake gcc python python-pip
 RUN pip install --upgrade pip
 RUN pip install scipy
+RUN pip install numpy
 
 WORKDIR /opt
 
