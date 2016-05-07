@@ -193,12 +193,12 @@ def main(argv):
     getParameters(argv[1:])
     if inChrFile=='' or inResFile=='':
         usage()
-        sys.exit(1)
-    
+        return 1        
     get_valid_name_length(inChrFile)
     validate_file(inResFile)
     remove_duplicate()
     print "Validated" 
+    return 0
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv)) 
