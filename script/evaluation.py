@@ -6,7 +6,7 @@ import argparse
 import subprocess
 
 def validate(args):
-	val = subprocess.Popen(["./bedpeValidatorS.py", "-s", "-c", "/opt/SMC-RNA-Challenge/FusionDetection/Validator/GRCh37.chromosome.strict.txt", "-i",args.inputbedpe , "-o", args.outputbedpe], stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+	val = subprocess.Popen(["bedpeValidatorS.py", "-s", "-c", "/opt/SMC-RNA-Challenge/FusionDetection/Validator/GRCh37.chromosome.strict.txt", "-i",args.inputbedpe , "-o", args.outputbedpe], stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 	out = val.stdout.read()
 	error = val.stderr.read()
 	if out != '' or error != '':
@@ -26,12 +26,12 @@ def evaluate(args):
 
 def evaluateIsoformQuant(args):
 	try:
-		val = subprocess.check_call(["./quantificationValidator.py", "-g", args.gtf, "-i", args.input])
+		val = subprocess.check_call(["quantificationValidator.py", "-g", args.gtf, "-i", args.input])
 	except Exception as e:
 		val = str(e)
 	if val == 0:
 		val = "success"
-		#evaluate = subprocess.check_call(["./quantificationEvaluator", "-t", args.truth, "-i", args.input])
+		#evaluate = subprocess.check_call(["quantificationEvaluator", "-t", args.truth, "-i", args.input])
 	with open("result.out",'w') as results:
 		results.write(val)
 		results.close()
