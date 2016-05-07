@@ -30,7 +30,7 @@ def evaluateFusionDet(args):
 	except Exception as e:
 		val = str(e)
 	if val == 0:
-		evaluate = subprocess.Popen(["fusionToolEvaluator", "-t", args.truth,"-r",args.input,"-g", args.gtf,"-s","/opt/SMC-RNA-Challenge/FusionDetection/Evaluator/rulefile.txt","-o","result.out"], stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+		evaluate = subprocess.check_call(["fusionToolEvaluator", "-t", args.truth,"-r",args.input,"-g", args.gtf,"-s","/opt/SMC-RNA-Challenge/FusionDetection/Evaluator/rulefile.txt","-o","result.out"])
 	else:
 		with open("result.out",'w') as results:
 			results.write(e)
