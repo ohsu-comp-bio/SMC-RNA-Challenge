@@ -94,7 +94,10 @@ def main(argv):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         final = calculateCor()
-    return(final)
+        with open("result.out",'w') as results:
+            results.write(final)
+            results.close()
+    return(0)
     
 if __name__ == '__main__':
     sys.exit(main(sys.argv))
