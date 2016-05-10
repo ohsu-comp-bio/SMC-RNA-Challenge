@@ -78,14 +78,13 @@ transcripts_used = defaultdict(lambda: 0)
 def valideRecord():
     infile = "%s" % inFile
     f=open(infile,"r")
-    #First line is headers
-    num = 0
+    #ignore all headers
     while True:
         line=f.readline()
         if line=="":
             break
-        elif num==0:
-            num = num+1
+        elif not line.startsWith("ENST"):
+            continue
         else:
             tmp=line.split("\t")
             line=line[0:len(line)-1]
@@ -103,8 +102,6 @@ def valideRecord():
                 sys.exit(1)
             if isFloat(value):
                 transcripts_used[name]=1
-            num = num+1
-
 
 def main(argv):
     getParameters(argv[1:])

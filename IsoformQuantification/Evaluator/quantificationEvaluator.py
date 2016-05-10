@@ -55,6 +55,8 @@ def getInputDic():
         line=f.readline()
         if line=="":
             break
+        elif not line.startsWith("ENST"):
+            continue
         else:
             tmp=line.split("\t")
             name=tmp[0]
@@ -71,6 +73,8 @@ def getBothValues():
         line=f.readline()
         if line=="":
             break
+        elif not line.startsWith("ENST"):
+            continue
         else:
             tmp=line.split("\t")
             name=tmp[0]
