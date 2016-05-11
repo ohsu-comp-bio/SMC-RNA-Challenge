@@ -1,15 +1,13 @@
 { 
-    "inputbedpe": {
+    "input": {
         "class": "File",
         "path": "../../../SMC-RNA-Challenge/Validator/test/res.1.good.bedpe"
     },
-    "outputbedpe": "valid.bedpe",
-    "truthfile": {
+    "truth": {
         "class": "File",
         "path": "../../input/truth.bedpe",
     },  
-    "evaloutput": "result.out",
-    "geneAnnotationFile": {
+    "gtf": {
         "class": "File",
         "path": "../../input/ensembl.hg19.txt",
     }

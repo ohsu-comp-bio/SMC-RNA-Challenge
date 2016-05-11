@@ -6,7 +6,7 @@ class: Workflow
 
 cwlVersion: "cwl:draft-3"
 
-description: "Fusion Detection Validator/Evaluator workflow"
+description: "Isoform Quantification Validator/Evaluator workflow"
 
 inputs: 
 
@@ -28,7 +28,7 @@ outputs:
 steps:
 
   - id: evaluator
-    run: FusionEvaluator.cwl
+    run: QuantificationEvaluator.cwl
     inputs:
     - {id: truth, source: "#truth"}
     - {id: input, source: "#input"}

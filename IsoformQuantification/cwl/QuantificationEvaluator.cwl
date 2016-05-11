@@ -32,7 +32,8 @@ inputs:
       position: 1
 
 outputs:
-  - id: evaluatoroutput
+
+  - id: output
     type: File
     outputBinding:
       glob: result.out
