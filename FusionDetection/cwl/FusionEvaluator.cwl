@@ -4,66 +4,38 @@ cwlVersion: "cwl:draft-3"
 
 class: CommandLineTool
 
-description: |
-  evaluation is developed for SMC-RNA Challenge
-  Original tool usage: #update tool usage
+description: "Fusion Detection validation and evaluation"
 
 requirements:
   - class: InlineJavascriptRequirement
   - class: DockerRequirement
     dockerPull: dreamchallenge/smcrna-functions
 
-# The position determines where the commands are placed in command line
 inputs:
 
-  - id: truthfile
+  - id: truth
     type: File
-    description: | 
-      bedpe-refer to SMC-RNA
     inputBinding:
-      prefix: --truthfile
+      prefix: --truth
       position: 1
   
-  - id: inputbedpe
-    type: ["null",File]
-    description: | 
-      bedpe-refer to SMC-RNA
-    inputBinding:
-      prefix: --inputbedpe
-      position: 1
-
-  - id: error
-    type: ["null",File]
-    description: | 
-      error.log to SMC-RNA
-    inputBinding:
-      prefix: --error
-      position: 1
-
-  - id: geneAnnotationFile
+  - id: input
     type: File
-    description: |
-      Gene annotation file- refer to SMC-RNA
+    inputBinding:
+      prefix: --input
+      position: 1
+
+  - id: gtf
+    type: File
     inputBinding:
       prefix: --gtf
       position: 1
 
-  - id: output
-    type: string
-    inputBinding:
-      prefix: --outputbedpe
-      position: 1
-
 outputs:
-  - id: evaluatoroutput
-    type: ["null",File]
+  - id: output
+    type: File
     outputBinding:
-      glob: $(inputs.output)
+      glob: result.out
 
-  - id: errorlog
-    type: ["null",File]
-    outputBinding:
-      glob: error.log
-
-baseCommand: [evaluation.py,evaluate]
+baseCommand: [evaluation.py,evaluateFusionDet]
 

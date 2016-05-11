@@ -411,14 +411,23 @@ def archive(evaluation, destination=None, name=None, query=None):
             with open(newFilePath,"r") as cwlfile:
                 docs = yaml.load(cwlfile)
                 merged = docs['$graph']
+                docker = []
                 for tools in merged:
+                    if tools['class'] == 'CommandLineTool':
+                        if tools.get('requirements',None) is not None:
+                            for i in tools['requirements']:
+                                if i.get('dockerPull',None) is not None:
+                                    docker.append(i['dockerPull'])
                     if tools['class'] == 'Workflow':
                         for i in tools['inputs']:
                             if i.get('synData',None) is not None:
                                 synId = i['synData']
+
             synu.copy(syn, synId, submission_parent)
-            #docker pull
-            #docker save
+            for i in docker:
+                os.system('docker pull %s' % i)
+                os.system('docker save %s' % i)
+                os.sysmte('sudo docker save -o %s.tar %s' %(os.path.basename(i),i))
             print "created:", entity.id, entity.name
             return entity.id
 
