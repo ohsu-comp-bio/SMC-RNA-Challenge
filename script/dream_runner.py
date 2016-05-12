@@ -56,11 +56,9 @@ def call_workflow(cwl, fastq1, fastq2, index_path):
 def call_evaluation(cwl, truth, annotations):
     # local = "eval-workflow.cwl"
     # shutil.copyfile(cwl, local)
-    inputs = ["--inputbedpe", "filtered_fusion.bedpe",
-              "--outputbedpe", "valid.bedpe",
-              "--truthfile", truth,
-              "--evaloutput", "result.out",
-              "--geneAnnotationFile", annotations]
+    inputs = ["--input", "filtered_fusion.bedpe",
+              "--truth", truth,
+              "--gtf", annotations]
 
     call_cwl(cwl, inputs)
     # os.remove(local)
