@@ -48,6 +48,7 @@ import traceback
 import urllib
 import uuid
 import warnings
+import shutil
 
 try:
     import challenge_config as conf
@@ -236,7 +237,7 @@ def score(evaluation, dry_run=False):
             else:
                 score['team'] = '?'
 
-            status.annotations = synapseclient.annotations.to_submission_status_annotations(score,is_private=False)
+            status.annotations = synapseclient.annotations.to_submission_status_annotations(score,is_private=True)
             status.status = "SCORED"
             ## if there's a table configured, update it
             if not dry_run and evaluation.id in conf.leaderboard_tables:
@@ -388,9 +389,6 @@ def archive(evaluation, destination=None, name=None, query=None):
     :param query: a query that will return the desired submissions. At least the ID must be returned.
                   defaults to _select * from evaluation_[EVAL_ID] where status=="SCORED"_.
     """
-    tempdir = tempfile.mkdtemp()
-    archive_dirname = 'submissions_%s' % utils.id_of(evaluation)
-
     if not query:
         query = 'select * from evaluation_%s where status=="SCORED"' % utils.id_of(evaluation)
 
@@ -398,29 +396,40 @@ def archive(evaluation, destination=None, name=None, query=None):
     results = Query(query=query)
     if 'objectId' not in results.headers:
         raise ValueError("Can't find the required field \"objectId\" in the results of the query: \"{0}\"".format(query))
-    if not name:
-        name = 'submissions_%s.tgz' % utils.id_of(evaluation)
-    tar_path = os.path.join(tempdir, name)
-    print "creating tar at:", tar_path
-    print results.headers
-    with tarfile.open(tar_path, mode='w:gz') as archive:
-        with open(os.path.join(tempdir, 'submission_metadata.csv'), 'w') as f:
-            f.write( (','.join(hdr for hdr in (results.headers + ['filename'])) + '\n').encode('utf-8') )
-            for result in results:
-                ## retrieve file into cache and copy it to destination
-                submission = syn.getSubmission(result[results.headers.index('objectId')])
-                prefixed_filename = submission.id + "_" + os.path.basename(submission.filePath)
-                archive.add(submission.filePath, arcname=os.path.join(archive_dirname, prefixed_filename))
-                line = (','.join(unicode(item) for item in (result+[prefixed_filename]))).encode('utf-8')
-                print line
-                f.write(line + '\n')
-        archive.add(
-            name=os.path.join(tempdir, 'submission_metadata.csv'),
-            arcname=os.path.join(archive_dirname, 'submission_metadata.csv'))
+    for result in results:
+        store=True
+        try:
+            submission_parent = syn.store(Folder(result[results.headers.index('objectId')],parent=destination))
+        except Exception as e:
+            store=False
+            print(e)
+        if store:
+            submission = syn.getSubmission(result[results.headers.index('objectId')])
+            newFilePath = submission.filePath.replace(' ', '_')
+            shutil.move(submission.filePath,newFilePath)
+            entity = syn.store(File(newFilePath, parent=submission_parent)) #evaluation_id=utils.id_of(evaluation))
+            with open(newFilePath,"r") as cwlfile:
+                docs = yaml.load(cwlfile)
+                merged = docs['$graph']
+                docker = []
+                for tools in merged:
+                    if tools['class'] == 'CommandLineTool':
+                        if tools.get('requirements',None) is not None:
+                            for i in tools['requirements']:
+                                if i.get('dockerPull',None) is not None:
+                                    docker.append(i['dockerPull'])
+                    if tools['class'] == 'Workflow':
+                        for i in tools['inputs']:
+                            if i.get('synData',None) is not None:
+                                synId = i['synData']
 
-    entity = syn.store(File(tar_path, parent=destination), evaluation_id=utils.id_of(evaluation))
-    print "created:", entity.id, entity.name
-    return entity.id
+            synu.copy(syn, synId, submission_parent)
+            for i in docker:
+                os.system('docker pull %s' % i)
+                os.system('docker save %s' % i)
+                os.sysmte('sudo docker save -o %s.tar %s' %(os.path.basename(i),i))
+            print "created:", entity.id, entity.name
+            return entity.id
 
 
 ## ==================================================

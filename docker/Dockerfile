@@ -2,17 +2,23 @@ FROM ubuntu:14.04
 
 #Install Essentials
 RUN apt-get -y update
-RUN apt-get install -y git build-essential cmake gcc python
+RUN apt-get install -y git build-essential cmake gcc python python-pip
+RUN pip install --upgrade pip
+RUN pip install scipy
+RUN pip install numpy
 
 WORKDIR /opt
 
-#Install evaluator, validator
+#Install evaluators, and validators
 RUN git clone https://github.com/Sage-Bionetworks/SMC-RNA-Challenge.git && \
 	cd SMC-RNA-Challenge && \
 	cp script/evaluation.py /usr/local/bin/ && \
+	cp FusionDetection/Validator/bedpeValidatorS.py /usr/local/bin && \
+	cp IsoformQuantification/Validator/quantificationValidator.py /usr/local/bin && \
+	cp IsoformQuantification/Evaluator/quantificationEvaluator.py /usr/local/bin && \
 	mkdir build && \
 	cd build && \
-	cmake ../FusionEvaluator/ -DCMAKE_BUILD_TYPE=release && \
+	cmake ../FusionDetection/Evaluator/ -DCMAKE_BUILD_TYPE=release && \
 	make && \
 	cp bin/fusionToolEvaluator /usr/local/bin/
 

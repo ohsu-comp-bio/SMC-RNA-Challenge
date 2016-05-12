@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+
 import sys
 import os
 import math
@@ -13,8 +15,12 @@ def usage():
         -o/--output-file        [string:    path to output bedpe   ]
 
     Optional Parameters:
-        -s/--is-strict          [Change to True. Default: False  No user strings                       ]
+        -s/--is-strict-1        [Change to True. Default: False  No user strings in column 7           ]
+        -x/--is-strict-2        [Change to True. Default: False  No user scores in column 8            ]
         -d/--is-keep-dot        [Change to True. Default: False  Not keeping lines with strands as dots]
+                                [Warning: if False, also not attemping to remove duplicate transcripts ]
+    
+    Version:                    1.0.1
           """
 
 
@@ -22,17 +28,18 @@ def usage():
 inChrFile= ''                #input chromosome file
 inResFile = ''               #input bedpe
 outResFile = ''              #output bedpe
-isStrict = False             #If True, {only keeps column 1-6,9-10;7,8 will assign values by this code}
-                             #If False, only check 1-6,9-10
+isStrict1 = False            #If True, change column 7 to "nameX"  
+isStrict2 = False            #If True, change colomn 8 to 0
 isKeepDotInStrand = False    #If True, keeps the records with dots in strands
 
 def getParameters(argv):
     try:
-        opts, args = getopt.getopt(argv,"hc:i:o:sd",["help",
+        opts, args = getopt.getopt(argv,"hc:i:o:sxd",["help",
                                                      "chromosome-file=",
                                                      "input-file=",
                                                      "output-file=",
-                                                     "is-strict",
+                                                     "is-strict-1",
+                                                     "is-strict-2",
                                                      "is-keep-dot"])
     except getopt.GetoptError:
         usage()
@@ -50,9 +57,12 @@ def getParameters(argv):
         elif opt in ("-c","--chromosome-file"):
             global inChrFile
             inChrFile = arg
-        elif opt in ("-s","--is-strict"):
-            global isStrict
-            isStrict = True
+        elif opt in ("-s","--is-strict-1"):
+            global isStrict1
+            isStrict1 = True
+        elif opt in ("-x","--is-strict-2"):
+            global isStrict2
+            isStrict2 = True
         elif opt in ("-d","--is-keep-dot"):
             global isKeepDotInStrand
             isKeepDotInStrand = True
@@ -172,17 +182,56 @@ def validate_file(fileName):
             if isKeepDotInStrand==False and iscd==True:
                 continue
             else:
-                if isStrict:
+                if isStrict1:
                     tmp[6]="name"+str(index)
+                if isStrict2:
                     tmp[7]="0"
-                    tmp2=[]
-                    for x in range(10):
-                        tmp2.append(tmp[x])
-                    out_data.append(tmp2)
-                else:
-                    out_data.append(tmp) 
+                out_data.append(tmp) 
                 index=index+1
     f.close()
+
+def remove_duplicate():
+    global out_data
+    if isKeepDotInStrand==True:
+        return
+    else:
+        for i in range(len(out_data)):
+            pos1=0
+            pos2=0
+            if out_data[i][8]=="+":
+                pos1=out_data[i][2]
+            else:
+                pos1=out_data[i][1]
+            if out_data[i][9]=="+":
+                pos2=out_data[i][4]
+            else:
+                pos2=out_data[i][5]
+            out_data[i].append(get_integer(pos1))
+            out_data[i].append(get_integer(pos2))
+        
+        out_data = sorted(out_data, key = lambda x: (x[0], x[3], x[8], x[9], x[10], x[11]))
+        out_data_2 = []
+        for i in range(len(out_data)):
+            if i==0:
+                out_data_2.append(out_data[i])
+            if i>=1:
+                if out_data[i][0]==out_data[i-1][0] and out_data[i][3]==out_data[i-1][3] and out_data[i][8]==out_data[i-1][8] and out_data[i][9]==out_data[i-1][9]:
+                    delta1=0
+                    delta2=0
+                    lenRow=len(out_data[i])
+                    if out_data[i][8]=="+":
+                        delta1 = out_data[i][lenRow-2]-out_data[i-1][lenRow-2]
+                    else:
+                        delta1 = out_data[i-1][lenRow-2]-out_data[i][lenRow-2]
+                    if out_data[i][9]=="+":
+                        delta2 = out_data[i][lenRow-1]-out_data[i-1][lenRow-1]
+                    else:
+                        delta2 = out_data[i-1][lenRow-1]-out_data[i][lenRow-1]
+                    if delta1 !=delta2:
+                        out_data_2.append(out_data[i])
+                else:
+                    out_data_2.append(out_data[i])
+        out_data=out_data_2
 
 def print_to_file(fileName):
 
@@ -190,10 +239,10 @@ def print_to_file(fileName):
     f=open(outfile,"w")
     for i in range(len(out_data)):
         tmp=out_data[i]
-        for j in range(len(tmp)-1):
+        for j in range(9):
             f.write(tmp[j])
             f.write("\t")
-        f.write(tmp[len(tmp)-1])
+        f.write(tmp[9])
         f.write("\n") 
     f.close()    
 
@@ -214,5 +263,7 @@ if __name__ == '__main__':
     get_valid_name_length(inChrFile)
     
     validate_file(inResFile)
+   
+    remove_duplicate()
 
     print_to_file(outResFile) 

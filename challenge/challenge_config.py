@@ -69,10 +69,7 @@ for q in evaluation_queues:
 leaderboard_tables = {}
 
 
-def validate_1(evaluation,submission):
-    return (True,"Passed validation!")
-
-def validate_2(evaluation,submission,syn):
+def validate(evaluation,submission,syn):
     try:
         test = subprocess.check_call(["cwltool", "--non-strict", "--print-pre", submission])
     except Exception as e:
@@ -131,7 +128,7 @@ def validate_2(evaluation,submission,syn):
                     workflowinputs = workflowinputs + workflowoutputs
                     for y in i['inputs']:
                         #Check: Workflow tool steps match the cwltools inputs
-                        steps = "%s/%s/%s" % ("input",os.path.basename(i['run'][1:]),y['id'])
+                        steps = "%s/%s/%s" % ("input",i['run'][1:],y['id'])
                         assert steps in cwltools, 'Your tool inputs do not match your workflow inputs'
                         #Check: All sources used are included in the workflow inputs
                         if 'source' in y:
@@ -153,14 +150,14 @@ config_evaluations = [
     {
         'id':5952651,
         'score_as_part_of_challenge': False,
-        'validation_function': validate_1,
+        'validation_function': validate,
         'scoring_function': score,
 
     },
     {
         'id':5877348,
         'score_as_part_of_challenge': False,
-        'validation_function': validate_2,
+        'validation_function': validate,
         'scoring_function': score,
 
     }
