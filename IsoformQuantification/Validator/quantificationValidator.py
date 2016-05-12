@@ -54,8 +54,8 @@ def getAllTranscriptNames():
         if line=="":
             break
         #GTF files have comments
-        elif line[0] == "#":
-            tmp = ""
+        elif line.startsWith("#"):
+            continue
         else:
             tmp=line.split("\t")
             tmp2=tmp[8].split(" ")
