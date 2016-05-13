@@ -18,6 +18,7 @@
 
 import synapseclient
 import synapseclient.utils as utils
+import synapseutils as synu
 from synapseclient.exceptions import *
 from synapseclient import Activity
 from synapseclient import Project, Folder, File
@@ -26,6 +27,7 @@ from synapseclient import Wiki
 from synapseclient import Column
 from synapseclient.dict_object import DictObject
 from synapseclient.annotations import from_submission_status_annotations
+
 
 from collections import OrderedDict
 from datetime import datetime, timedelta
@@ -49,6 +51,7 @@ import urllib
 import uuid
 import warnings
 import shutil
+import yaml
 
 try:
     import challenge_config as conf
