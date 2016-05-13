@@ -400,13 +400,9 @@ def archive(evaluation, destination=None, name=None, query=None):
     if 'objectId' not in results.headers:
         raise ValueError("Can't find the required field \"objectId\" in the results of the query: \"{0}\"".format(query))
     for result in results:
-        store=True
-        try:
-            submission_parent = syn.store(Folder(result[results.headers.index('objectId')],parent=destination))
-        except Exception as e:
-            store=False
-            print(e)
-        if store:
+        submission_parent = syn.store(Folder(result[results.headers.index('objectId')],parent=destination))
+        check = syn.query('select id from file where parentId == "%s"' % submission_parent.id)
+        if check['totalNumberOfResults'] ==0:
             submission = syn.getSubmission(result[results.headers.index('objectId')])
             newFilePath = submission.filePath.replace(' ', '_')
             shutil.move(submission.filePath,newFilePath)
