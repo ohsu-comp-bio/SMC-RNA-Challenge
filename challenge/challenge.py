@@ -422,12 +422,13 @@ def archive(evaluation, destination=None, name=None, query=None):
                         for i in tools['inputs']:
                             if i.get('synData',None) is not None:
                                 synId = i['synData']
-
-            synu.copy(syn, synId, submission_parent)
+            temp = synu.copy(syn, synId, submission_parent)
             for i in docker:
                 os.system('docker pull %s' % i)
                 os.system('docker save %s' % i)
-                os.sysmte('sudo docker save -o %s.tar %s' %(os.path.basename(i),i))
+                os.system('sudo docker save -o %s.tar %s' %(os.path.basename(i),i))
+                syn.store(File("%s.tar" % os.path.basename(i), parent=submission_parent))
+                os.remove("%s.tar" % os.path.basename(i))
             print "created:", entity.id, entity.name
             return entity.id
 
