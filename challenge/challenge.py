@@ -421,6 +421,7 @@ def archive(evaluation, destination=None, name=None, query=None):
                         for i in tools['inputs']:
                             if i.get('synData',None) is not None:
                                 temp = synu.copy(syn, i['synData'], submission_parent.id)
+            os.system('rm -rf ~/.synapseCache/*')
             docker = set(docker)
             for i in docker:
                 os.system('sudo docker pull %s' % i)
