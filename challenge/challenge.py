@@ -424,8 +424,7 @@ def archive(evaluation, destination=None, name=None, query=None):
                     if tools['class'] == 'Workflow':
                         for i in tools['inputs']:
                             if i.get('synData',None) is not None:
-                                synId = i['synData']
-            temp = synu.copy(syn, synId, submission_parent)
+                                temp = synu.copy(syn, i['synData'], submission_parent)
             for i in docker:
                 os.system('docker pull %s' % i)
                 os.system('docker save %s' % i)
