@@ -4,8 +4,8 @@ FROM ubuntu:14.04
 RUN apt-get -y update
 RUN apt-get install -y git build-essential cmake gcc python python-pip python-dev
 RUN pip install --upgrade pip
-RUN pip install scipy
 RUN pip install numpy
+RUN pip install scipy
 
 WORKDIR /opt
 
