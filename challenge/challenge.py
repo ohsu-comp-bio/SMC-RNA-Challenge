@@ -433,8 +433,6 @@ def archive(evaluation, destination=None, name=None, query=None):
                 os.system('sudo chmod a+r %s.tar' % os.path.basename(i))
                 syn.store(File("%s.tar" % os.path.basename(i), parent=submission_parent))
                 os.remove("%s.tar" % os.path.basename(i))
-            print "created:", entity.id, entity.name
-            return entity.id
 
 
 ## ==================================================
