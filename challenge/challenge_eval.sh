@@ -15,6 +15,6 @@ python challenge.py -u SMC-RNA --send-messages --notifications score --all >> lo
 #Cache submissions
 #--------------------
 #Fusion detection
-python challenge.py -u SMC-RNA cache 5877348 syn6054684 
+python challenge.py -u SMC-RNA cache 5877348 syn6045218 
 #Isoform Quantification
-python challenge.py -u SMC-RNA cache 5952651 syn6054685 
+python challenge.py -u SMC-RNA cache 5952651 syn6045218 
