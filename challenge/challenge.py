@@ -381,7 +381,7 @@ def list_evaluations(project):
     for evaluation in evaluations:
         print "Evaluation: %s" % evaluation.id, evaluation.name.encode('utf-8')
 
-
+#Special archive function written for SMC-RNA
 def archive(evaluation, destination=None, name=None, query=None):
     """
     Archive the submissions for the given evaluation queue and store them in the destination synapse folder.
@@ -400,7 +400,8 @@ def archive(evaluation, destination=None, name=None, query=None):
     if 'objectId' not in results.headers:
         raise ValueError("Can't find the required field \"objectId\" in the results of the query: \"{0}\"".format(query))
     for result in results:
-        #Nede to update this syn query
+        #Check if the folder has already been created in synapse 
+        #(This is used as a tool to check submissions that have already been cached)
         submissionId = result[results.headers.index('objectId')]
         check = syn.query('select id,name from folder where parentId == "%s" and name == "%s"' % (destination,submissionId))
         if check['totalNumberOfResults']==0:
@@ -409,6 +410,7 @@ def archive(evaluation, destination=None, name=None, query=None):
             submission = syn.getSubmission(submissionId, downloadLocation=submissionId)
             newFilePath = submission.filePath.replace(' ', '_')
             shutil.move(submission.filePath,newFilePath)
+            #Store CWL file in bucket
             os.system('gsutil cp -R %s gs://smc-rna-cache/%s' % (submissionId,path))
             with open(newFilePath,"r") as cwlfile:
                 docs = yaml.load(cwlfile)
@@ -424,8 +426,10 @@ def archive(evaluation, destination=None, name=None, query=None):
                         for i in tools['inputs']:
                             if i.get('synData',None) is not None:
                                 temp = syn.get(i['synData'])
+                                #Store index files
                                 os.system('gsutil cp %s gs://smc-rna-cache/%s/%s' % (temp.path,path,submissionId))
             os.system('rm -rf ~/.synapseCache/*')
+            #Pull, save, and store docker containers
             docker = set(docker)
             for i in docker:
                 os.system('sudo docker pull %s' % i)
