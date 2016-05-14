@@ -408,7 +408,7 @@ def archive(evaluation, destination=None, name=None, query=None):
             submission = syn.getSubmission(submissionId, downloadLocation=submissionId)
             newFilePath = submission.filePath.replace(' ', '_')
             shutil.move(submission.filePath,newFilePath)
-            os.system('gsutil cp -R %s gs://smc-rna-cache-test' % newFilePath)
+            os.system('gsutil cp -R %s gs://smc-rna-cache' % newFilePath)
             with open(newFilePath,"r") as cwlfile:
                 docs = yaml.load(cwlfile)
                 merged = docs['$graph']
@@ -423,7 +423,7 @@ def archive(evaluation, destination=None, name=None, query=None):
                         for i in tools['inputs']:
                             if i.get('synData',None) is not None:
                                 temp = syn.get(i['synData'])
-                                os.system('gsutil cp %s gs://smc-rna-cache-test/%s' % (temp.path,submissionId))
+                                os.system('gsutil cp %s gs://smc-rna-cache/%s' % (temp.path,submissionId))
             os.system('rm -rf ~/.synapseCache/*')
             docker = set(docker)
             for i in docker:
@@ -432,7 +432,7 @@ def archive(evaluation, destination=None, name=None, query=None):
                 os.system('sudo docker save -o %s.tar %s' %(os.path.basename(i),i))
                 os.system('sudo chmod a+r %s.tar' % os.path.basename(i))
                 os.remove("%s.tar" % os.path.basename(i))
-                os.system('gsutil cp %s.tar gs://smc-rna-cache-test/%s' % (os.path.basename(i),submissionId))
+                os.system('gsutil cp %s.tar gs://smc-rna-cache/%s' % (os.path.basename(i),submissionId))
             os.system('rm -rf %s' % submissionId)
 
 
