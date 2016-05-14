@@ -28,7 +28,6 @@ from synapseclient import Column
 from synapseclient.dict_object import DictObject
 from synapseclient.annotations import from_submission_status_annotations
 
-
 from collections import OrderedDict
 from datetime import datetime, timedelta
 from itertools import izip
@@ -400,13 +399,16 @@ def archive(evaluation, destination=None, name=None, query=None):
     if 'objectId' not in results.headers:
         raise ValueError("Can't find the required field \"objectId\" in the results of the query: \"{0}\"".format(query))
     for result in results:
-        submission_parent = syn.store(Folder(result[results.headers.index('objectId')],parent=destination))
-        check = syn.query('select id from file where parentId == "%s"' % submission_parent.id)
-        if check['totalNumberOfResults'] ==0:
-            submission = syn.getSubmission(result[results.headers.index('objectId')])
+        #Nede to update this syn query
+        submissionId = result[results.headers.index('objectId')]
+        check = syn.query('select id,name from folder where parentId == "%s" and name == "%s"' % (destination,submissionId))
+        if check['totalNumberOfResults']==0:
+            os.mkdir(submissionId)
+            submission_parent = syn.store(Folder(submissionId,parent=destination))
+            submission = syn.getSubmission(submissionId, downloadLocation=submissionId)
             newFilePath = submission.filePath.replace(' ', '_')
             shutil.move(submission.filePath,newFilePath)
-            entity = syn.store(File(newFilePath, parent=submission_parent)) #evaluation_id=utils.id_of(evaluation))
+            os.system('gsutil cp -R %s gs://smc-rna-cache-test' % newFilePath)
             with open(newFilePath,"r") as cwlfile:
                 docs = yaml.load(cwlfile)
                 merged = docs['$graph']
@@ -420,7 +422,8 @@ def archive(evaluation, destination=None, name=None, query=None):
                     if tools['class'] == 'Workflow':
                         for i in tools['inputs']:
                             if i.get('synData',None) is not None:
-                                temp = synu.copy(syn, i['synData'], submission_parent.id)
+                                temp = syn.get(i['synData'])
+                                os.system('gsutil cp %s gs://smc-rna-cache-test/%s' % (temp.path,submissionId))
             os.system('rm -rf ~/.synapseCache/*')
             docker = set(docker)
             for i in docker:
@@ -428,8 +431,9 @@ def archive(evaluation, destination=None, name=None, query=None):
                 os.system('sudo docker save %s' % i)
                 os.system('sudo docker save -o %s.tar %s' %(os.path.basename(i),i))
                 os.system('sudo chmod a+r %s.tar' % os.path.basename(i))
-                syn.store(File("%s.tar" % os.path.basename(i), parent=submission_parent))
                 os.remove("%s.tar" % os.path.basename(i))
+                os.system('gsutil cp %s.tar gs://smc-rna-cache-test/%s' % (os.path.basename(i),submissionId))
+            os.system('rm -rf %s' % submissionId)
 
 
 ## ==================================================
@@ -637,4 +641,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
