@@ -391,9 +391,10 @@ def archive(evaluation, destination=None, name=None, query=None):
     :param query: a query that will return the desired submissions. At least the ID must be returned.
                   defaults to _select * from evaluation_[EVAL_ID] where status=="SCORED"_.
     """
+    challenge = {5877348:"FusionDetection",5952651:"IsoformQuantification"}
     if not query:
         query = 'select * from evaluation_%s where status=="SCORED"' % utils.id_of(evaluation)
-
+    path = challenge[utils.id_of(evaluation)]
     ## for each submission, download it's associated file and write a line of metadata
     results = Query(query=query)
     if 'objectId' not in results.headers:
@@ -408,7 +409,7 @@ def archive(evaluation, destination=None, name=None, query=None):
             submission = syn.getSubmission(submissionId, downloadLocation=submissionId)
             newFilePath = submission.filePath.replace(' ', '_')
             shutil.move(submission.filePath,newFilePath)
-            os.system('gsutil cp -R %s gs://smc-rna-cache' % submissionId)
+            os.system('gsutil cp -R %s gs://smc-rna-cache/%s' % (submissionId,path))
             with open(newFilePath,"r") as cwlfile:
                 docs = yaml.load(cwlfile)
                 merged = docs['$graph']
@@ -423,7 +424,7 @@ def archive(evaluation, destination=None, name=None, query=None):
                         for i in tools['inputs']:
                             if i.get('synData',None) is not None:
                                 temp = syn.get(i['synData'])
-                                os.system('gsutil cp %s gs://smc-rna-cache/%s' % (temp.path,submissionId))
+                                os.system('gsutil cp %s gs://smc-rna-cache/%s/%s' % (temp.path,path,submissionId))
             os.system('rm -rf ~/.synapseCache/*')
             docker = set(docker)
             for i in docker:
@@ -431,7 +432,7 @@ def archive(evaluation, destination=None, name=None, query=None):
                 os.system('sudo docker save %s' % i)
                 os.system('sudo docker save -o %s.tar %s' %(os.path.basename(i),i))
                 os.system('sudo chmod a+r %s.tar' % os.path.basename(i))
-                os.system('gsutil cp %s.tar gs://smc-rna-cache/%s' % (os.path.basename(i),submissionId))
+                os.system('gsutil cp %s.tar gs://smc-rna-cache/%s/%s' % (os.path.basename(i),path,submissionId))
                 os.remove("%s.tar" % os.path.basename(i))
             os.system('rm -rf %s' % submissionId)
 
