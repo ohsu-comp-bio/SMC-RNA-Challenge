@@ -391,7 +391,7 @@ def archive(evaluation, destination=None, name=None, query=None):
     :param query: a query that will return the desired submissions. At least the ID must be returned.
                   defaults to _select * from evaluation_[EVAL_ID] where status=="SCORED"_.
     """
-    challenge = {5877348:"FusionDetection",5952651:"IsoformQuantification"}
+    challenge = {'5877348':'FusionDetection','5952651':'IsoformQuantification'}
     if not query:
         query = 'select * from evaluation_%s where status=="SCORED"' % utils.id_of(evaluation)
     path = challenge[utils.id_of(evaluation)]
