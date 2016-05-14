@@ -408,7 +408,7 @@ def archive(evaluation, destination=None, name=None, query=None):
             submission = syn.getSubmission(submissionId, downloadLocation=submissionId)
             newFilePath = submission.filePath.replace(' ', '_')
             shutil.move(submission.filePath,newFilePath)
-            os.system('gsutil cp -R %s gs://smc-rna-cache' % newFilePath)
+            os.system('gsutil cp -R %s gs://smc-rna-cache' % submissionId)
             with open(newFilePath,"r") as cwlfile:
                 docs = yaml.load(cwlfile)
                 merged = docs['$graph']
