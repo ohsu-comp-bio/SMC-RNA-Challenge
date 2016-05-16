@@ -39,7 +39,7 @@ def find_synapse_data(cwl):
 def call_cwl(tool, inputs):
     arguments = ["cwl-runner",
                  "--non-strict",
-                 "--cache-intermediate-output",
+                 "--cachedir", "./",
                  # "--tmpdir-prefix", "/data/tmp",
                  # "--tmp-outdir-prefix", "/data/tmp",
                  tool]
