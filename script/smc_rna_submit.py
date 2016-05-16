@@ -51,7 +51,7 @@ except ImportError:
 CONFIG_FILE = os.path.join(os.environ['HOME'], ".dreamSubmitConfig")
 
 CHALLENGE_ADMIN_TEAM_ID = 3322844
-EVALUATION_QUEUE_ID = 5877348
+EVALUATION_QUEUE_ID = {"fusion":5877348,"isoform":5952651}
 
 def validate_workflow(syn,args):
     print("\n\n###VALIDATING MERGED WORKFLOW###\n\n")
@@ -146,8 +146,11 @@ def submit_workflow(syn, args):
     """
 
     print(args.CWLfile)
-
     args.CWLfile = merge(syn, args)
+    challenge = args.challenge
+    challenge = challenge.lower()
+    if challenge not in ("fusion","isoform"):
+        raise ValueError("Must select either 'fusion' or 'isoform'")
     try:
         validate_workflow(syn, args)
         print("\n\n###SUBMITTING MERGED WORKFLOW: %s###\n\n" % args.CWLfile)
@@ -157,7 +160,7 @@ def submit_workflow(syn, args):
             args.projectId = project['id']
             print "View your project here: https://www.synapse.org/#!Synapse:%s" % args.projectId
         CWL = syn.store(File(args.CWLfile, parent = project))
-        submission = syn.submit(EVALUATION_QUEUE_ID, CWL, name=CWL.name, team=args.teamName)
+        submission = syn.submit(EVALUATION_QUEUE_ID[challenge], CWL, name=CWL.name, team=args.teamName)
         print "Created submission ID: %s" % submission.id
     except Exception as e:
         print(e)
@@ -257,6 +260,8 @@ if __name__ == "__main__":
             help='CWL workflow file')
     parser_submit.add_argument('--teamName',  metavar='My Team', type=str, default = None,
             help='Challenge team name, leave blank if not part of a team')
+    parser_submit.add_argument('--challenge',  metavar='fusion', type=str, required=True,
+            help='Challenge to submit to: (fusion or isoform)')
     parser_submit.add_argument('--projectId',  metavar='syn123', type=str, default = None,
             help='Synapse Id of a project that you want the submission to be uploaded to, will create a project automatically if no projectId is specified')
     parser_submit.set_defaults(func=submit_workflow)

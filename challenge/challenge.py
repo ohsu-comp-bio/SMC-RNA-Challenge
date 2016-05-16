@@ -18,6 +18,7 @@
 
 import synapseclient
 import synapseclient.utils as utils
+import synapseutils as synu
 from synapseclient.exceptions import *
 from synapseclient import Activity
 from synapseclient import Project, Folder, File
@@ -49,6 +50,7 @@ import urllib
 import uuid
 import warnings
 import shutil
+import yaml
 
 try:
     import challenge_config as conf
@@ -379,7 +381,7 @@ def list_evaluations(project):
     for evaluation in evaluations:
         print "Evaluation: %s" % evaluation.id, evaluation.name.encode('utf-8')
 
-
+#Special archive function written for SMC-RNA
 def archive(evaluation, destination=None, name=None, query=None):
     """
     Archive the submissions for the given evaluation queue and store them in the destination synapse folder.
@@ -389,25 +391,27 @@ def archive(evaluation, destination=None, name=None, query=None):
     :param query: a query that will return the desired submissions. At least the ID must be returned.
                   defaults to _select * from evaluation_[EVAL_ID] where status=="SCORED"_.
     """
+    challenge = {'5877348':'FusionDetection','5952651':'IsoformQuantification'}
     if not query:
         query = 'select * from evaluation_%s where status=="SCORED"' % utils.id_of(evaluation)
-
+    path = challenge[utils.id_of(evaluation)]
     ## for each submission, download it's associated file and write a line of metadata
     results = Query(query=query)
     if 'objectId' not in results.headers:
         raise ValueError("Can't find the required field \"objectId\" in the results of the query: \"{0}\"".format(query))
     for result in results:
-        store=True
-        try:
-            submission_parent = syn.store(Folder(result[results.headers.index('objectId')],parent=destination))
-        except Exception as e:
-            store=False
-            print(e)
-        if store:
-            submission = syn.getSubmission(result[results.headers.index('objectId')])
+        #Check if the folder has already been created in synapse 
+        #(This is used as a tool to check submissions that have already been cached)
+        submissionId = result[results.headers.index('objectId')]
+        check = syn.query('select id,name from folder where parentId == "%s" and name == "%s"' % (destination,submissionId))
+        if check['totalNumberOfResults']==0:
+            os.mkdir(submissionId)
+            submission_parent = syn.store(Folder(submissionId,parent=destination))
+            submission = syn.getSubmission(submissionId, downloadLocation=submissionId)
             newFilePath = submission.filePath.replace(' ', '_')
             shutil.move(submission.filePath,newFilePath)
-            entity = syn.store(File(newFilePath, parent=submission_parent)) #evaluation_id=utils.id_of(evaluation))
+            #Store CWL file in bucket
+            os.system('gsutil cp -R %s gs://smc-rna-cache/%s' % (submissionId,path))
             with open(newFilePath,"r") as cwlfile:
                 docs = yaml.load(cwlfile)
                 merged = docs['$graph']
@@ -421,15 +425,20 @@ def archive(evaluation, destination=None, name=None, query=None):
                     if tools['class'] == 'Workflow':
                         for i in tools['inputs']:
                             if i.get('synData',None) is not None:
-                                synId = i['synData']
-
-            synu.copy(syn, synId, submission_parent)
+                                temp = syn.get(i['synData'])
+                                #Store index files
+                                os.system('gsutil cp %s gs://smc-rna-cache/%s/%s' % (temp.path,path,submissionId))
+            os.system('rm -rf ~/.synapseCache/*')
+            #Pull, save, and store docker containers
+            docker = set(docker)
             for i in docker:
-                os.system('docker pull %s' % i)
-                os.system('docker save %s' % i)
-                os.sysmte('sudo docker save -o %s.tar %s' %(os.path.basename(i),i))
-            print "created:", entity.id, entity.name
-            return entity.id
+                os.system('sudo docker pull %s' % i)
+                os.system('sudo docker save %s' % i)
+                os.system('sudo docker save -o %s.tar %s' %(os.path.basename(i),i))
+                os.system('sudo chmod a+r %s.tar' % os.path.basename(i))
+                os.system('gsutil cp %s.tar gs://smc-rna-cache/%s/%s' % (os.path.basename(i),path,submissionId))
+                os.remove("%s.tar" % os.path.basename(i))
+            os.system('rm -rf %s' % submissionId)
 
 
 ## ==================================================
@@ -637,4 +646,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
