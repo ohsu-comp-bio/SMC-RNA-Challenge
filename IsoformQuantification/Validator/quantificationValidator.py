@@ -54,7 +54,7 @@ def getAllTranscriptNames():
         if line=="":
             break
         #GTF files have comments
-        elif line.startsWith("#"):
+        elif line.startswith("#"):
             continue
         else:
             tmp=line.split("\t")
@@ -83,7 +83,7 @@ def valideRecord():
         line=f.readline()
         if line=="":
             break
-        elif not line.startsWith("ENST"):
+        elif not line.startswith("ENST"):
             continue
         else:
             tmp=line.split("\t")
