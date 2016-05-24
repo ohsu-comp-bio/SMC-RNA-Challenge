@@ -66,7 +66,7 @@ def validate_workflow(syn,args):
         except Exception as e:
             raise Exception("Must be a CWL file (Yaml format)")
 
-    assert docs['cwlVersion'] == 'cwl:draft-3'
+    assert docs['cwlVersion'] == 'draft-3', "cwlVersion must be draft-3"
     if docs.get('$graph',None) is None:
         raise ValueError("Please run 'python smc_rna_submit.py merge --CWLfile %s'" % args.CWLfile)
     else:
@@ -79,49 +79,51 @@ def validate_workflow(syn,args):
         for tools in merged:
             if tools['class'] == 'CommandLineTool':
                 for i in tools['inputs']:
-                    cwltools.append("%s/%s/%s" % ("input",tools['id'],i['id']))
+                    cwltools.append("%s/%s" % ("input",i['id']))
                 for i in tools['outputs']:
-                    cwltools.append("%s/%s/%s" % ("output",tools['id'],i['id']))
+                    cwltools.append("%s/%s" % ("output",i['id']))
             else:
                 #Check: Workflow class
                 assert tools['class'] == 'Workflow', 'CWL Classes can only be named "Workflow" or "CommandLineTool'
-                for i in tools['inputs']:
-                    workflowinputs.append("#%s/%s" % (tools['id'],i['id']))
-                    if i.get('synData',None) is not None:
-                        synId = i['synData']
-                #Check: synData must exist as an input (tarball of the index files)
-                if synId is None:
-                    raise ValueError("""Must have synData as a parameter in an input (This is the synapse ID of the tarball of your index files): ie.
-                                        -id: index
-                                        -type: File
-                                        -synData: syn12345
-                                     """)
-                else:
-                    indexFiles = syn.get(synId,downloadFile=False)
-                    acls = syn._getACL(indexFiles)
-                    for acl in acls['resourceAccess']:
-                        if acl['principalId'] == CHALLENGE_ADMIN_TEAM_ID:
-                            assert 'READ' in acl['accessType'], "At least View/READ access has to be given to the SMC_RNA_Admins Team: (Team ID: 3322844)"
-                #Check: Must contain these four inputs in workflow step
-                for i in ["TUMOR_FASTQ_1","TUMOR_FASTQ_2"]:
-                    required = "#%s/%s" % (tools['id'],i)
-                    assert required in workflowinputs, "Your workflow MUST contain at least these four inputs: 'TUMOR_FASTQ_1','TUMOR_FASTQ_2'"
-                for i in tools['steps']:
-                    for y in i['outputs']:
-                        workflowoutputs.append("#%s/%s/%s" %(tools['id'],i['id'],y['id']))
-                    workflowinputs = workflowinputs + workflowoutputs
-                    for y in i['inputs']:
-                        #Check: Workflow tool steps match the cwltools inputs
-                        steps = "%s/%s/%s" % ("input",i['run'][1:],y['id'])
-                        assert steps in cwltools, 'Your tool inputs do not match your workflow inputs'
-                        #Check: All sources used are included in the workflow inputs
-                        if 'source' in y:
-                            assert y['source'] in workflowinputs, 'Not all of your inputs in your workflow are mapped'
-                for i in tools['outputs']:
-                    assert i['id'] == 'FUSION_OUTPUT', "Your workflow output id must be FUSION_OUTPUT"
-                    #Check: All outputs have the correct sources mapped
-                    if 'source' in i:
-                        assert i['source'] in workflowoutputs, 'Your workflow output is not mapped correctly to your tools'
+                workflow = tools
+
+        for i in workflow['inputs']:
+            workflowinputs.append("%s" % i['id'])
+            if i.get('synData',None) is not None:
+                synId = i['synData']
+        #Check: synData must exist as an input (tarball of the index files)
+        if synId is None:
+            raise ValueError("""Must have synData as a parameter in an input (This is the synapse ID of the tarball of your index files): ie.
+                                -id: index
+                                -type: File
+                                -synData: syn12345
+                             """)
+        else:
+            indexFiles = syn.get(synId,downloadFile=False)
+            acls = syn._getACL(indexFiles)
+            for acl in acls['resourceAccess']:
+                if acl['principalId'] == CHALLENGE_ADMIN_TEAM_ID:
+                    assert 'READ' in acl['accessType'], "At least View/READ access has to be given to the SMC_RNA_Admins Team: (Team ID: 3322844)"
+        #Check: Must contain these four inputs in workflow step
+        for i in ["TUMOR_FASTQ_1","TUMOR_FASTQ_2"]:
+            required = "#main/%s" % i
+            assert required in workflowinputs, "Your workflow MUST contain at least these two inputs: 'TUMOR_FASTQ_1','TUMOR_FASTQ_2'"
+        for i in workflow['steps']:
+            for y in i['outputs']:
+                workflowoutputs.append("%s" % y['id'])
+            workflowinputs = workflowinputs + workflowoutputs
+            for y in i['inputs']:
+                #Check: Workflow tool steps match the cwltools inputs
+                steps = "%s/#%s/%s" % ("input",i['run'][1:],os.path.basename(y['id']))
+                assert steps in cwltools, 'Your tool inputs do not match your workflow inputs'
+                #Check: All sources used are included in the workflow inputs
+                if 'source' in y:
+                    assert y['source'] in workflowinputs, 'Not all of your inputs in your workflow are mapped'
+        for i in workflow['outputs']:
+            assert i['id'] == '#main/OUTPUT', "Your workflow output id must be OUTPUT"
+            #Check: All outputs have the correct sources mapped
+            if 'source' in i:
+                assert i['source'] in workflowoutputs, 'Your workflow output is not mapped correctly to your tools'
     print("\n\nYour workflow passed validation!")
     return 1
 
@@ -187,45 +189,46 @@ def merge(syn, args):
     workflowjson = "%s_dep.json" % os.path.join(outputDirectory,fileName)
     os.system('cwltool --print-deps "%s" > %s' % (args.CWLfile,workflowjson))
 
-    workflow = open(args.CWLfile)
-    docs = yaml.load(workflow)
+    with open(args.CWLfile) as workflow:
+        docs = yaml.load(workflow)
 
-    #If CWL workflow isn't merged, then merge them
-    if "$graph" not in docs:
-        with open(workflowjson) as data_file:    
-            data = json.load(data_file)
-            if data.get('secondaryFiles',None) is None:
-                raise ValueError("No secondary files to Merge")
-            else:
-                combined = []
-                #Dependencies (CWLtools)
-                for dep in data['secondaryFiles']:
-                    depcwl = open(os.path.join(workflowPath,dep['path']),"r")
-                    docs = yaml.load(depcwl)
-                    docs['id'] = str(os.path.basename(dep['path']))
-                    del docs['cwlVersion']
-                    combined.append(docs)
-                #Workflow (steps)
-                workflow = open(os.path.join(workflowPath,data['path']),"r")
-                docs = yaml.load(workflow)
-                del docs['cwlVersion']
-                docs['id'] = str(os.path.basename(data['path']))
-                for steps in docs['steps']:
-                    steps['run'] = "#" + os.path.basename(steps['run'])
-                    for i in steps['inputs']:
-                        if i.get('source',False):
-                            i['source'] = "#%s/%s" % (docs['id'],i['source'][1:])
-                for steps in docs['outputs']:
-                    steps['source'] = "#%s/%s" % (docs['id'],steps['source'][1:])
-                combined.append(docs)
-                merged = {"cwlVersion":"cwl:draft-3","$graph":combined}
+        #If CWL workflow isn't merged, then merge them
+        if "$graph" not in docs:
+            os.system('cwltool --pack %s > %s' % (args.CWLfile,'%s_%s_merged.cwl' %(os.path.join(outputDirectory,fileName),str(time.time()).split('.')[0])))
+            # with open(workflowjson) as data_file:    
+            #     data = json.load(data_file)
+            #     if data.get('secondaryFiles',None) is None:
+            #         raise ValueError("No secondary files to Merge")
+            #     else:
+            #         combined = []
+            #         #Dependencies (CWLtools)
+            #         for dep in data['secondaryFiles']:
+            #             depcwl = open(os.path.join(workflowPath,dep['path']),"r")
+            #             docs = yaml.load(depcwl)
+            #             docs['id'] = str(os.path.basename(dep['path']))
+            #             del docs['cwlVersion']
+            #             combined.append(docs)
+            #         #Workflow (steps)
+            #         workflow = open(os.path.join(workflowPath,data['path']),"r")
+            #         docs = yaml.load(workflow)
+            #         del docs['cwlVersion']
+            #         docs['id'] = str(os.path.basename(data['path']))
+            #         for steps in docs['steps']:
+            #             steps['run'] = "#" + os.path.basename(steps['run'])
+            #             for i in steps['inputs']:
+            #                 if i.get('source',False):
+            #                     i['source'] = "#%s/%s" % (docs['id'],i['source'][1:])
+            #         for steps in docs['outputs']:
+            #             steps['source'] = "#%s/%s" % (docs['id'],steps['source'][1:])
+            #         combined.append(docs)
+            #         merged = {"cwlVersion":"cwl:draft-3","$graph":combined}
 
-                with open('%s_%s_merged.cwl' %(os.path.join(outputDirectory,fileName),str(time.time()).split('.')[0]), 'w') as outfile:
-                    outfile.write(yaml.dump(merged))
-        args.CWLfile = '%s_%s_merged.cwl' % (os.path.join(outputDirectory,fileName),str(time.time()).split('.')[0])
-    else:
-        shutil.copy(args.CWLfile, os.path.join(outputDirectory,fileName))
-        print("CWL files are already merged")
+            #         with open('%s_%s_merged.cwl' %(os.path.join(outputDirectory,fileName),str(time.time()).split('.')[0]), 'w') as outfile:
+            #             outfile.write(yaml.dump(merged))
+            args.CWLfile = '%s_%s_merged.cwl' % (os.path.join(outputDirectory,fileName),str(time.time()).split('.')[0])
+        else:
+            shutil.copy(args.CWLfile, os.path.join(outputDirectory,fileName))
+            print("CWL files are already merged")
     os.remove(workflowjson)
     print("Merged workflow: %s" % os.path.join(outputDirectory,fileName))
     return(args.CWLfile)
