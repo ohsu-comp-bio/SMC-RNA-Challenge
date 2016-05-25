@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#!/usr/bin/env python
 
 import os
 import yaml
@@ -37,7 +37,12 @@ def find_synapse_data(cwl):
     return input['synData']
 
 def call_cwl(tool, inputs):
-    arguments = ["cwl-runner", "--non-strict", tool]
+    arguments = ["cwl-runner",
+                 "--non-strict",
+                 "--cachedir", "./",
+                 # "--tmpdir-prefix", "/data/tmp",
+                 # "--tmp-outdir-prefix", "/data/tmp",
+                 tool]
     arguments.extend(inputs)
     subprocess.check_call(arguments)    
 
@@ -48,17 +53,15 @@ def call_workflow(cwl, fastq1, fastq2, index_path):
 
     call_cwl(cwl, inputs)
 
-def call_evaluation(cwl, truth, annotation):
-    local = "eval-workflow.cwl"
-    shutil.copyfile(cwl, local)
-    inputs = ["--inputbedpe", "filtered_fusion.bedpe",
-              "--outputbedpe", "valid.bedpe",
-              "--truthfile", truth,
-              "--evaloutput", "result.out",
-              "--geneAnnotationFile", annotation]
+def call_evaluation(cwl, truth, annotations):
+    # local = "eval-workflow.cwl"
+    # shutil.copyfile(cwl, local)
+    inputs = ["--input", "filtered_fusion.bedpe",
+              "--truth", truth,
+              "--gtf", annotations]
 
-    call_cwl(local, inputs)
-    os.remove(local)
+    call_cwl(cwl, inputs)
+    # os.remove(local)
 
 def run_dream(synapse, args):
     cwlpath = args.workflow_cwl
@@ -68,9 +71,10 @@ def run_dream(synapse, args):
 
     print("SYNAPSE: " + synapse_id)
 
+    # index = synapse.get(synapse_id, downloadLocation="/data")
     index = synapse.get(synapse_id)
     call_workflow(args.workflow_cwl, args.fastq1, args.fastq2, index.path)
-    call_evaluation(args.eval_cwl, args.truth, args.annotation)
+    call_evaluation(args.eval_cwl, args.truth, args.annotations)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='DREAM runner - run your workflow from beginning to end.')
