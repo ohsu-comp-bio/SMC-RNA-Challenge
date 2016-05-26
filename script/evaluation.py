@@ -7,7 +7,7 @@ import subprocess
 
 def evaluateFusionDet(args):
 	try:
-		val = subprocess.check_call(["bedpeValidatorS.py", "-c", "/opt/SMC-RNA-Challenge/FusionDetection/Validator/GRCh37.chromosome.strict.txt", "-i",args.input])
+		val = subprocess.check_call(["/opt/SMC-RNA-Challenge/FusionDetection/Validator/bedpeValidatorS.py", "-c", "/opt/SMC-RNA-Challenge/FusionDetection/Validator/GRCh37.chromosome.strict.txt", "-i",args.input])
 	except Exception as e:
 		val = str(e)
 	if val == 0:
@@ -19,11 +19,11 @@ def evaluateFusionDet(args):
 
 def evaluateIsoformQuant(args):
 	try:
-		val = subprocess.check_call(["quantificationValidator.py", "-g", args.gtf, "-i", args.input])
+		val = subprocess.check_call(["/opt/SMC-RNA-Challenge/IsoformQuantification/Validator/quantificationValidator.py", "-g", args.gtf, "-i", args.input])
 	except Exception as e:
 		val = str(e)
 	if val == 0:
-		evaluate = subprocess.check_call(["quantificationEvaluator.py", "-t", args.truth, "-i", args.input])
+		evaluate = subprocess.check_call(["/opt/SMC-RNA-Challenge/IsoformQuantification/Evaluator/quantificationEvaluator.py", "-t", args.truth, "-i", args.input])
 	else:
 		with open("result.out",'w') as results:
 			results.write(val)
