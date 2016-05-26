@@ -4,17 +4,17 @@ cd /home/thomas_yu/SMC-RNA-Challenge/challenge/
 #---------------------
 #Validate submissions
 #---------------------
-python challenge.py -u SMC-RNA --send-messages --notifications validate --all >> log/score.log 2>&1
+python challenge.py -u SMC_RNA --send-messages --notifications validate --all >> log/score.log 2>&1
 
 #--------------------
 #Score submissions
 #--------------------
-python challenge.py -u SMC-RNA --send-messages --notifications score --all >> log/score.log 2>&1
+python challenge.py -u SMC_RNA --send-messages --notifications score --all >> log/score.log 2>&1
 
 #--------------------
 #Cache submissions
 #--------------------
 #Fusion detection
-python challenge.py -u SMC-RNA archive 5877348 syn6045218 
+python challenge.py -u SMC_RNA archive 5877348 syn6045218 
 #Isoform Quantification
-python challenge.py -u SMC-RNA archive 5952651 syn6045218 
+python challenge.py -u SMC_RNA archive 5952651 syn6045218 
