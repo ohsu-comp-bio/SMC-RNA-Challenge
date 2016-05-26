@@ -75,14 +75,13 @@ def validate(evaluation,submission,syn):
     except Exception as e:
         raise ValueError("Your CWL file is not formatted correctly",e)
 
-    print "Checking Workflow"
     with open(submission,"r") as cwlfile:
         try:
             docs = yaml.load(cwlfile)
         except Exception as e:
             raise Exception("Must be a CWL file (Yaml format)")
 
-    assert docs['cwlVersion'] == 'cwl:draft-3'
+    assert docs['cwlVersion'] == 'draft-3', "cwlVersion must be draft-3"
     if docs.get('$graph',None) is None:
         raise ValueError("Please run 'python smc_rna_submit.py merge --CWLfile %s'" % submission)
     else:
@@ -95,49 +94,51 @@ def validate(evaluation,submission,syn):
         for tools in merged:
             if tools['class'] == 'CommandLineTool':
                 for i in tools['inputs']:
-                    cwltools.append("%s/%s/%s" % ("input",tools['id'],i['id']))
+                    cwltools.append("%s/%s" % ("input",i['id']))
                 for i in tools['outputs']:
-                    cwltools.append("%s/%s/%s" % ("output",tools['id'],i['id']))
+                    cwltools.append("%s/%s" % ("output",i['id']))
             else:
                 #Check: Workflow class
                 assert tools['class'] == 'Workflow', 'CWL Classes can only be named "Workflow" or "CommandLineTool'
-                for i in tools['inputs']:
-                    workflowinputs.append("#%s/%s" % (tools['id'],i['id']))
-                    if i.get('synData',None) is not None:
-                        synId = i['synData']
-                #Check: synData must exist as an input (tarball of the index files)
-                if synId is None:
-                    raise ValueError("""Must have synData as a parameter in an input (This is the synapse ID of the tarball of your index files): ie.
-                                        -id: index
-                                        -type: File
-                                        -synData: syn12345
-                                     """)
-                else:
-                    indexFiles = syn.get(synId,downloadFile=False)
-                    acls = syn._getACL(indexFiles)
-                    for acl in acls['resourceAccess']:
-                        if acl['principalId'] == CHALLENGE_ADMIN_TEAM_ID:
-                            assert 'READ' in acl['accessType'], "At least View/READ access has to be given to the SMC_RNA_Admins Team: (Team ID: 3322844)"
-                #Check: Must contain these four inputs in workflow step
-                for i in ["TUMOR_FASTQ_1","TUMOR_FASTQ_2"]:
-                    required = "#%s/%s" % (tools['id'],i)
-                    assert required in workflowinputs, "Your workflow MUST contain at least these four inputs: 'TUMOR_FASTQ_1','TUMOR_FASTQ_2'"
-                for i in tools['steps']:
-                    for y in i['outputs']:
-                        workflowoutputs.append("#%s/%s/%s" %(tools['id'],i['id'],y['id']))
-                    workflowinputs = workflowinputs + workflowoutputs
-                    for y in i['inputs']:
-                        #Check: Workflow tool steps match the cwltools inputs
-                        steps = "%s/%s/%s" % ("input",i['run'][1:],y['id'])
-                        assert steps in cwltools, 'Your tool inputs do not match your workflow inputs'
-                        #Check: All sources used are included in the workflow inputs
-                        if 'source' in y:
-                            assert y['source'] in workflowinputs, 'Not all of your inputs in your workflow are mapped'
-                for i in tools['outputs']:
-                    assert i['id'] == 'FUSION_OUTPUT', "Your workflow output id must be FUSION_OUTPUT"
-                    #Check: All outputs have the correct sources mapped
-                    if 'source' in i:
-                        assert i['source'] in workflowoutputs, 'Your workflow output is not mapped correctly to your tools'
+                workflow = tools
+
+        for i in workflow['inputs']:
+            workflowinputs.append("%s" % i['id'])
+            if i.get('synData',None) is not None:
+                synId = i['synData']
+        #Check: synData must exist as an input (tarball of the index files)
+        if synId is None:
+            raise ValueError("""Must have synData as a parameter in an input (This is the synapse ID of the tarball of your index files): ie.
+                                -id: index
+                                -type: File
+                                -synData: syn12345
+                             """)
+        else:
+            indexFiles = syn.get(synId,downloadFile=False)
+            acls = syn._getACL(indexFiles)
+            for acl in acls['resourceAccess']:
+                if acl['principalId'] == CHALLENGE_ADMIN_TEAM_ID:
+                    assert 'READ' in acl['accessType'], "At least View/READ access has to be given to the SMC_RNA_Admins Team: (Team ID: 3322844)"
+        #Check: Must contain these four inputs in workflow step
+        for i in ["TUMOR_FASTQ_1","TUMOR_FASTQ_2"]:
+            required = "#main/%s" % i
+            assert required in workflowinputs, "Your workflow MUST contain at least these two inputs: 'TUMOR_FASTQ_1','TUMOR_FASTQ_2'"
+        for i in workflow['steps']:
+            for y in i['outputs']:
+                workflowoutputs.append("%s" % y['id'])
+            workflowinputs = workflowinputs + workflowoutputs
+            for y in i['inputs']:
+                #Check: Workflow tool steps match the cwltools inputs
+                steps = "%s/#%s/%s" % ("input",i['run'][1:],os.path.basename(y['id']))
+                assert steps in cwltools, 'Your tool inputs do not match your workflow inputs'
+                #Check: All sources used are included in the workflow inputs
+                if 'source' in y:
+                    assert y['source'] in workflowinputs, 'Not all of your inputs in your workflow are mapped'
+        for i in workflow['outputs']:
+            assert i['id'] == '#main/OUTPUT', "Your workflow output id must be OUTPUT"
+            #Check: All outputs have the correct sources mapped
+            if 'source' in i:
+                assert i['source'] in workflowoutputs, 'Your workflow output is not mapped correctly to your tools'
     return (True,"Passed validation!")
 
 
