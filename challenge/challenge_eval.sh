@@ -4,12 +4,12 @@ cd /home/thomas_yu/SMC-RNA-Challenge/challenge/
 #---------------------
 #Validate submissions
 #---------------------
-python challenge.py -u SMC_RNA --send-messages --notifications validate --all >> log/score.log 2>&1
+python challenge.py -u SMC_RNA --send-messages --acknowledge-receipt --notifications validate --all >> log/score.log 2>&1
 
 #--------------------
 #Score submissions
 #--------------------
-python challenge.py -u SMC_RNA --send-messages --notifications score --all >> log/score.log 2>&1
+#python challenge.py -u SMC_RNA --send-messages --notifications score --all >> log/score.log 2>&1
 
 #--------------------
 #Cache submissions
