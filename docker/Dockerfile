@@ -19,5 +19,7 @@ RUN git clone https://github.com/Sage-Bionetworks/SMC-RNA-Challenge.git && \
 	make #&& \
 	#cp bin/fusionToolEvaluator /usr/local/bin/
 
-ENV PATH /opt/SMC-RNA-Challenge/IsoformQuantification/Validator/:/opt/SMC-RNA-Challenge/IsoformQuantification/Evaluator/:/opt/SMC-RNA-Challenge/FusionDetection/Evaluator/bin/:/opt/SMC-RNA-Challenge/FusionDetection/Validator/:/opt/SMC-RNA-Challenge/script/:/usr/local/bin/:/usr/bin:/bin
+ENV PATH /opt/SMC-RNA-Challenge/IsoformQuantification/Validator/:/usr/bin:/bin
+ENV PATH /opt/SMC-RNA-Challenge/IsoformQuantification/Evaluator/:/usr/bin:/bin
+ENV PATH /opt/SMC-RNA-Challenge/build/bin/:/opt/SMC-RNA-Challenge/FusionDetection/Validator/:/opt/SMC-RNA-Challenge/script/:/usr/local/bin/:/usr/bin:/bin
 
