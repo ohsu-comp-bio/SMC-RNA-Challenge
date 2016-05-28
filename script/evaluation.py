@@ -6,27 +6,36 @@ import argparse
 import subprocess
 
 def evaluateFusionDet(args):
+	validator_path = os.path.join(os.path.dirname(__file__), "..", "FusionDetection", "Validator", "bedpeValidatorS.py")
+	chrom_path = os.path.join(os.path.dirname(__file__), "..", "FusionDetection", "Validator", "GRCh37.chromosome.strict.txt")
+	rule_file = os.path.join(os.path.dirname(__file__), "..", "FusionDetection", "Evaluator", "rulefile.txt")
 	try:
-		val = subprocess.check_call(["/opt/SMC-RNA-Challenge/FusionDetection/Validator/bedpeValidatorS.py", "-c", "/opt/SMC-RNA-Challenge/FusionDetection/Validator/GRCh37.chromosome.strict.txt", "-i",args.input])
+		val = subprocess.Popen([validator_path, "-c", chrom_path, "-i",args.input],stdout=subprocess.PIPE)
+		output = val.stdout.read()
 	except Exception as e:
-		val = str(e)
-	if val == 0:
-		evaluate = subprocess.check_call(["fusionToolEvaluator", "-t", args.truth,"-r",args.input,"-g", args.gtf,"-s","/opt/SMC-RNA-Challenge/FusionDetection/Evaluator/rulefile.txt","-o","result.out"])
+		output = str(e)
+		print(output)
+	if output == "Validated\n":
+		evaluate = subprocess.check_call(["fusionToolEvaluator", "-t", args.truth,"-r",args.input,"-g", args.gtf,"-s",rule_file,"-o","result.out"])
 	else:
 		with open("result.out",'w') as results:
-			results.write(val)
+			results.write(output)
 			results.close()
 
 def evaluateIsoformQuant(args):
+	validator_path = os.path.join(os.path.dirname(__file__), "..", "IsoformQuantification", "Validator", "quantificationValidator.py")
+	evaluator_path = os.path.join(os.path.dirname(__file__), "..", "IsoformQuantification", "Evaluator", "quantificationEvaluator.py")
 	try:
-		val = subprocess.check_call(["/opt/SMC-RNA-Challenge/IsoformQuantification/Validator/quantificationValidator.py", "-g", args.gtf, "-i", args.input])
+		val = subprocess.Popen([validator_path, "-g", args.gtf, "-i", args.input],stdout=subprocess.PIPE)
+		output = val.stdout.read()
 	except Exception as e:
-		val = str(e)
-	if val == 0:
-		evaluate = subprocess.check_call(["/opt/SMC-RNA-Challenge/IsoformQuantification/Evaluator/quantificationEvaluator.py", "-t", args.truth, "-i", args.input])
+		output = str(e)
+		print(output)
+	if output == "Validated\n":
+		evaluate = subprocess.check_call([evaluator_path, "-t", args.truth, "-i", args.input])
 	else:
 		with open("result.out",'w') as results:
-			results.write(val)
+			results.write(output)
 			results.close()
 
 # ------------------------------------------------------------
