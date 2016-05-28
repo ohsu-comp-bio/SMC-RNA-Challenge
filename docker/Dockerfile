@@ -9,17 +9,14 @@ WORKDIR /opt
 #Install evaluators, and validators
 RUN git clone https://github.com/Sage-Bionetworks/SMC-RNA-Challenge.git && \
 	cd SMC-RNA-Challenge && \
-	#cp script/evaluation.py /usr/local/bin/ && \
-	#cp FusionDetection/Validator/bedpeValidatorS.py /usr/local/bin && \
-	#cp IsoformQuantification/Validator/quantificationValidator.py /usr/local/bin && \
-	#cp IsoformQuantification/Evaluator/quantificationEvaluator.py /usr/local/bin && \
 	mkdir build && \
 	cd build && \
 	cmake ../FusionDetection/Evaluator/ -DCMAKE_BUILD_TYPE=release && \
-	make #&& \
-	#cp bin/fusionToolEvaluator /usr/local/bin/
+	make
 
 ENV PATH /opt/SMC-RNA-Challenge/IsoformQuantification/Validator/:/usr/bin:/bin
-ENV PATH /opt/SMC-RNA-Challenge/IsoformQuantification/Evaluator/:/usr/bin:/bin
-ENV PATH /opt/SMC-RNA-Challenge/build/bin/:/opt/SMC-RNA-Challenge/FusionDetection/Validator/:/opt/SMC-RNA-Challenge/script/:/usr/local/bin/:/usr/bin:/bin
+ENV PATH /opt/SMC-RNA-Challenge/IsoformQuantification/Evaluator/:/usr/bin:/bin 
+ENV PATH /opt/SMC-RNA-Challenge/build/bin/:/usr/bin:/bin
+ENV PATH /opt/SMC-RNA-Challenge/FusionDetection/Validator/:/usr/bin:/bin
+ENV PATH /opt/SMC-RNA-Challenge/script/:/usr/bin:/bin
 
