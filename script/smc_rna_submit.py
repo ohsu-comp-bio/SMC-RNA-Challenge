@@ -68,7 +68,7 @@ def validate_workflow(syn,args):
 
     assert docs['cwlVersion'] == 'draft-3', "cwlVersion must be draft-3"
     if docs.get('$graph',None) is None:
-        raise ValueError("Please run 'python smc_rna_submit.py merge --CWLfile %s'" % args.CWLfile)
+        raise ValueError("Please run 'python smc_rna_submit.py merge %s'" % args.CWLfile)
     else:
         requiredInputs = []
         cwltools = []
@@ -200,7 +200,7 @@ def merge(syn, args):
         #If CWL workflow isn't merged, then merge them
         newFileName = '%s_%s_merged.cwl' % (os.path.join(outputDirectory,fileName),str(time.time()).split('.')[0])
         if "$graph" not in docs:
-            os.system('cwltool --pack %s > %s' % (args.CWLfile,'%s_%s_merged.cwl' %(os.path.join(outputDirectory,fileName),str(time.time()).split('.')[0])))
+            os.system('cwltool --pack %s > %s' % (args.CWLfile,newFileName)
         else:
             shutil.copy(args.CWLfile, newFileName)
             print("CWL files are already merged")
