@@ -104,14 +104,19 @@ def validate(evaluation,submission,syn):
 
         for i in workflow['inputs']:
             workflowinputs.append("%s" % i['id'])
-            if i.get('synData',None) is not None:
-                synId = i['synData']
+
+        hints = workflow.get("hints",None)
+        if hints is not None:
+            synId = hints[0].get('entity',None)
+        else:
+            synId = None
         #Check: synData must exist as an input (tarball of the index files)
         if synId is None:
-            raise ValueError("""Must have synData as a parameter in an input (This is the synapse ID of the tarball of your index files): ie.
-                                -id: index
-                                -type: File
-                                -synData: syn12345
+            raise ValueError("""Must have synData (This is the synapse ID of the tarball of your index files) as a hint in the following format:
+                                hints:
+                                  - class: synData
+                                    input: index
+                                    entity: syn12345
                              """)
         else:
             indexFiles = syn.get(synId,downloadFile=False)

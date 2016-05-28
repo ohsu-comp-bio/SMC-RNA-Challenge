@@ -56,7 +56,7 @@ EVALUATION_QUEUE_ID = {"fusion":5877348,"isoform":5952651}
 def validate_workflow(syn,args):
     print("\n\n###VALIDATING MERGED WORKFLOW###\n\n")
     try:
-        test = subprocess.check_call(["cwltool", "--non-strict", "--print-pre", args.CWLfile])
+        test = subprocess.check_call(["cwltool", "--print-pre", args.CWLfile])
     except Exception as e:
         raise ValueError("Your CWL file is not formatted correctly",e)
 
@@ -89,14 +89,19 @@ def validate_workflow(syn,args):
 
         for i in workflow['inputs']:
             workflowinputs.append("%s" % i['id'])
-            if i.get('synData',None) is not None:
-                synId = i['synData']
+
+        hints = workflow.get("hints",None)
+        if hints is not None:
+            synId = hints[0].get('entity',None)
+        else:
+            synId = None
         #Check: synData must exist as an input (tarball of the index files)
         if synId is None:
-            raise ValueError("""Must have synData as a parameter in an input (This is the synapse ID of the tarball of your index files): ie.
-                                -id: index
-                                -type: File
-                                -synData: syn12345
+            raise ValueError("""Must have synData (This is the synapse ID of the tarball of your index files) as a hint in the following format:
+                                hints:
+                                  - class: synData
+                                    input: index
+                                    entity: syn12345
                              """)
         else:
             indexFiles = syn.get(synId,downloadFile=False)
@@ -193,51 +198,21 @@ def merge(syn, args):
         docs = yaml.load(workflow)
 
         #If CWL workflow isn't merged, then merge them
+        newFileName = '%s_%s_merged.cwl' % (os.path.join(outputDirectory,fileName),str(time.time()).split('.')[0])
         if "$graph" not in docs:
             os.system('cwltool --pack %s > %s' % (args.CWLfile,'%s_%s_merged.cwl' %(os.path.join(outputDirectory,fileName),str(time.time()).split('.')[0])))
-            # with open(workflowjson) as data_file:    
-            #     data = json.load(data_file)
-            #     if data.get('secondaryFiles',None) is None:
-            #         raise ValueError("No secondary files to Merge")
-            #     else:
-            #         combined = []
-            #         #Dependencies (CWLtools)
-            #         for dep in data['secondaryFiles']:
-            #             depcwl = open(os.path.join(workflowPath,dep['path']),"r")
-            #             docs = yaml.load(depcwl)
-            #             docs['id'] = str(os.path.basename(dep['path']))
-            #             del docs['cwlVersion']
-            #             combined.append(docs)
-            #         #Workflow (steps)
-            #         workflow = open(os.path.join(workflowPath,data['path']),"r")
-            #         docs = yaml.load(workflow)
-            #         del docs['cwlVersion']
-            #         docs['id'] = str(os.path.basename(data['path']))
-            #         for steps in docs['steps']:
-            #             steps['run'] = "#" + os.path.basename(steps['run'])
-            #             for i in steps['inputs']:
-            #                 if i.get('source',False):
-            #                     i['source'] = "#%s/%s" % (docs['id'],i['source'][1:])
-            #         for steps in docs['outputs']:
-            #             steps['source'] = "#%s/%s" % (docs['id'],steps['source'][1:])
-            #         combined.append(docs)
-            #         merged = {"cwlVersion":"cwl:draft-3","$graph":combined}
-
-            #         with open('%s_%s_merged.cwl' %(os.path.join(outputDirectory,fileName),str(time.time()).split('.')[0]), 'w') as outfile:
-            #             outfile.write(yaml.dump(merged))
-            args.CWLfile = '%s_%s_merged.cwl' % (os.path.join(outputDirectory,fileName),str(time.time()).split('.')[0])
         else:
-            shutil.copy(args.CWLfile, os.path.join(outputDirectory,fileName))
+            shutil.copy(args.CWLfile, newFileName)
             print("CWL files are already merged")
     os.remove(workflowjson)
-    print("Merged workflow: %s" % os.path.join(outputDirectory,fileName))
-    return(args.CWLfile)
+    print("Merged workflow: %s" % newFileName)
+    return(newFileName)
 
 
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(description='Submit Files to the DREAM mutation calling challenge. Please see https://www.synapse.org/#!Synapse:syn312572/wiki/60703 for usage instructions.')
+    parser = argparse.ArgumentParser(description='Submit Files to the DREAM SMC-RNA challenge. Please see https://www.synapse.org/#!Synapse:syn2813589/wiki/70850 for usage instructions.')
     #Stack.addJobTreeOptions(parser)
     parser.add_argument("--synapse_user", help="Synapse UserName", default=None)
     parser.add_argument("--password", help="Synapse password", default=None)
@@ -247,19 +222,19 @@ if __name__ == "__main__":
 
     parser_merge = subparsers.add_parser('merge',
             help='Merge all CWL files into one CWL file')
-    parser_merge.add_argument('--CWLfile',  metavar='workflow.cwl', type=str, required=True,
+    parser_merge.add_argument('CWLfile',  metavar='workflow.cwl', type=str,
             help='CWL workflow file')
     parser_merge.set_defaults(func=merge)
 
     parser_validate = subparsers.add_parser('validate',
             help='Validate CWL file')
-    parser_validate.add_argument('--CWLfile',  metavar='workflow_merged.cwl', type=str, required=True,
+    parser_validate.add_argument('CWLfile',  metavar='workflow_merged.cwl', type=str,
             help='CWL workflow file')
     parser_validate.set_defaults(func=validate_workflow)
 
     parser_submit = subparsers.add_parser('submit',
             help='Submit CWL file')
-    parser_submit.add_argument('--CWLfile',  metavar='workflow_merged.cwl', type=str, required=True,
+    parser_submit.add_argument('CWLfile',  metavar='workflow_merged.cwl', type=str,
             help='CWL workflow file')
     parser_submit.add_argument('--teamName',  metavar='My Team', type=str, default = None,
             help='Challenge team name, leave blank if not part of a team')
