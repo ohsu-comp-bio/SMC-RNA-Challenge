@@ -6,6 +6,7 @@ import shutil
 import argparse
 import subprocess
 import synapseclient
+import json
 
 def synapse_login(args):
     synapse = synapseclient.Synapse()
@@ -19,7 +20,7 @@ def synapse_login(args):
 
 def validate_cwl(cwlpath):
     try:
-        test = subprocess.check_call(['cwltool', '--non-strict', '--print-pre', cwlpath])
+        test = subprocess.check_call(['cwltool', '--print-pre', cwlpath])
     except Exception as e:
         raise ValueError('Your CWL file is not formatted correctly', e)
 
@@ -38,25 +39,28 @@ def find_synapse_data(cwl):
 
 def call_cwl(tool, inputs):
     arguments = ["cwl-runner",
-                 "--non-strict",
                  "--cachedir", "./",
                  # "--tmpdir-prefix", "/data/tmp",
                  # "--tmp-outdir-prefix", "/data/tmp",
                  tool]
     arguments.extend(inputs)
-    subprocess.check_call(arguments)    
+    process = subprocess.Popen(arguments,stdout=subprocess.PIPE)
+    output = process.stdout.read()
+    temp = json.loads(output)
+    return(temp['output']['path'])
 
 def call_workflow(cwl, fastq1, fastq2, index_path):
     inputs = ["--index", index_path,
               "--TUMOR_FASTQ_1", fastq1,
               "--TUMOR_FASTQ_2", fastq2]
 
-    call_cwl(cwl, inputs)
+    output = call_cwl(cwl, inputs)
+    return(output)
 
-def call_evaluation(cwl, truth, annotations):
+def call_evaluation(cwl, workflow_output, truth, annotations):
     # local = "eval-workflow.cwl"
     # shutil.copyfile(cwl, local)
-    inputs = ["--input", "filtered_fusion.bedpe",
+    inputs = ["--input", workflow_output,
               "--truth", truth,
               "--gtf", annotations]
 
@@ -73,20 +77,20 @@ def run_dream(synapse, args):
 
     # index = synapse.get(synapse_id, downloadLocation="/data")
     index = synapse.get(synapse_id)
-    call_workflow(args.workflow_cwl, args.fastq1, args.fastq2, index.path)
-    call_evaluation(args.eval_cwl, args.truth, args.annotations)
+    workflow_out = call_workflow(args.workflow_cwl, args.fastq1, args.fastq2, index.path)
+    call_evaluation(args.eval_cwl, workflow_out, args.truth, args.annotations)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='DREAM runner - run your workflow from beginning to end.')
     parser.add_argument('--synapse-user', help='synapse Username', default=None)
     parser.add_argument('--synapse-password', help='synapse password', default=None)
-    parser.add_argument('--workflow-cwl',  default='workflow/smc-tophat-workflow.cwl', type=str, help='cwl workflow file')
-    parser.add_argument('--eval-cwl',  default='../SMC-RNA-Challenge/cwl/eval-workflow.cwl', type=str, help='cwl workflow file')
+    parser.add_argument('--workflow-cwl',  default='smc-tophat-workflow.cwl', type=str, help='cwl workflow file')
+    parser.add_argument('--eval-cwl',  default='eval-workflow.cwl', type=str, help='cwl workflow file')
 
     parser.add_argument('--fastq1', default='sim1a_30m_merged_1.fq.gz')
     parser.add_argument('--fastq2', default='sim1a_30m_merged_2.fq.gz')
-    parser.add_argument('--truth', default='input/truth.bedpe')
-    parser.add_argument('--annotations', default='input/ensembl.hg19.txt')
+    parser.add_argument('--truth', default='truth.bedpe')
+    parser.add_argument('--annotations', default='ensembl.hg19.txt')
                         
     args = parser.parse_args()
     synapse = synapse_login(args)
