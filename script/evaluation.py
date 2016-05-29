@@ -63,7 +63,7 @@ parser_evaluateIsoformQuant.set_defaults(func=evaluateIsoformQuant)
 
 parser_evaluateFusionDet = subparsers.add_parser('evaluateFusionDet',
 		help='validates and evaluates Fusion Detection challenge')
-parser_evaluateFusionDet.add_argument('--gtf', help='Gene annotation file', metavar='ensemble.hg19.txt',type=str,required=True)
+parser_evaluateFusionDet.add_argument('--gtf', help='Fusion Detection gene annotation file (syn5908245)', metavar='Homo_sapiens.GRCh37.75.txt',type=str,required=True)
 parser_evaluateFusionDet.add_argument('--input',  metavar='results.bedpe', type=str, required=True,
 		help='bedpe format file'),
 parser_evaluateFusionDet.add_argument('--truth', help='Truth file', metavar='truth.bedpe',type=str,required=True)
