@@ -80,19 +80,78 @@ def run_dream(synapse, args):
     workflow_out = call_workflow(args.workflow_cwl, args.fastq1, args.fastq2, index.path)
     call_evaluation(args.eval_cwl, workflow_out, args.truth, args.annotations)
 
+def download(synapse,args):
+    try:
+        subprocess.check_call(["gsutil", "ls" ,"gs://dream-smc-rna"])
+    except Exception as e:
+        raise ValueError("You are not logged in to gcloud.  Please login by doing 'gcloud auth login' and follow the steps to have access to the google bucket")
+    arguments = None
+    dry_run = ["30m","100m","100m_gt","all"]
+    training = ['sim1','sim2','sim3','sim4','sim5','sim7','sim8','sim11','sim13','sim14','sim15','sim16','sim17','sim19','sim21']
+    if args.training is not None:
+        if args.training in training:
+            data = "gs://dream-scm-rna/training/%s_*" % args.training
+            arguments = ["gsutil","cp",data, args.dir]
+        else:
+            raise ValueError("Must pass in one of these options for downloading training data: %s" % ', '.join(training))
+
+    ["sim" + str(i) for i in range(1,21)]
+    if args.dryrun is not None:
+        path = "gs://dream-scm-rna/for_dry_run"
+        bedpe_truth = os.path.join(path,"sim1a_30m_truth.bedpe")
+        if args.training == "30m"
+            isoform_truth = os.path.join(path,"sim_diploid_30m.sim.isoforms.results_truth")
+            data =  os.path.join(path,"sim1a_30m_merged_*")
+        elif args.training == "100m":
+            isoform_truth = os.path.join(path,"sim_diploid_100m.sim.isoforms.results_truth")
+            data =  os.path.join(path,"sim1a_100m_merged_*") 
+        elif args.training == "100m_gt":
+            isoform_truth = os.path.join(path,"sim_diploid_100m_gt1.sim.isoforms.results_truth")
+            data =  os.path.join(path,"sim1a_100m_gt1_merged_*")
+        elif args.training == "all":
+            isoform_truth = os.path.join(path,"*isoforms*")
+            data = os.path.join(path,"*merged*")
+        else:
+            raise ValueError("Must pass in one of these options for downloading training data: %s" % ', '.join(dry_run))
+        arguments = ["gsutil","cp",bedpe_truth,isoform_truth,data,args.dir]
+    if arguments is not None:
+        subprocess.check_call(arguments)
+    else:
+        print("You did not pick any training or dry run data to download")
+
+
+def perform_main(args):
+    synapse = synapse_login(args)
+    if 'func' in args:
+        try:
+            args.func(synapse,args)
+        except Exception as ex:
+            print(ex)
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='DREAM runner - run your workflow from beginning to end.')
     parser.add_argument('--synapse-user', help='synapse Username', default=None)
     parser.add_argument('--synapse-password', help='synapse password', default=None)
-    parser.add_argument('--workflow-cwl',  default='smc-tophat-workflow.cwl', type=str, help='cwl workflow file')
-    parser.add_argument('--eval-cwl',  default='eval-workflow.cwl', type=str, help='cwl workflow file')
+    
+    subparsers = parser.add_subparsers(title='commands',description='The following commands are available:')
+    
+    parser_run = subparsers.add_parser('run',help='Runs workflow and evaluation framework')
+    parser_run.add_argument('--workflow-cwl',  default='smc-tophat-workflow.cwl', type=str, help='cwl workflow file')
+    parser_run.add_argument('--eval-cwl',  default='eval-workflow.cwl', type=str, help='cwl workflow file')
+    parser_run.add_argument('--fastq1', default='sim1a_30m_merged_1.fq.gz')
+    parser_run.add_argument('--fastq2', default='sim1a_30m_merged_2.fq.gz')
+    parser_run.add_argument('--truth', default='truth.bedpe')
+    parser_run.add_argument('--annotations', default='ensembl.hg19.txt')
+    parser_run.set_defaults(func=run_dream)
+    
+    parser_download = subparsers.add_parser('download',help='Downloads training and dry-run data')
+    parser_download.add_argument('--training', default=None, type=str, 
+        help='download training data: sim1, sim2, sim3, sim4, sim5, sim7, sim8, sim11, sim13, sim14, sim15, sim16, sim17, sim19, sim21')
+    parser_download.add_argument('--dryrun', default=None, type=str, 
+        help='download dry run data: 30m, 100m, 100m_gt')
+    parser_download.add_argument('--dir', default="./", type=str, 
+        help='Directory to download files to')
+    parser_run.set_defaults(func=download)
 
-    parser.add_argument('--fastq1', default='sim1a_30m_merged_1.fq.gz')
-    parser.add_argument('--fastq2', default='sim1a_30m_merged_2.fq.gz')
-    parser.add_argument('--truth', default='truth.bedpe')
-    parser.add_argument('--annotations', default='ensembl.hg19.txt')
-                        
     args = parser.parse_args()
-    synapse = synapse_login(args)
-
-    run_dream(synapse, args)
+    perform_main(args)
