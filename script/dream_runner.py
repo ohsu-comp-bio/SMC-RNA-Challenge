@@ -33,6 +33,7 @@ def load_cwl(cwlpath):
 
     return cwl
 
+##Change this code
 def find_synapse_data(cwl):
     input = filter(lambda input: input.get('synData', None) is not None, cwl['inputs'])[0]
     return input['synData']
@@ -94,8 +95,6 @@ def download(synapse,args):
             arguments = ["gsutil","cp",data, args.dir]
         else:
             raise ValueError("Must pass in one of these options for downloading training data: %s" % ', '.join(training))
-
-    ["sim" + str(i) for i in range(1,21)]
     if args.dryrun is not None:
         path = "gs://dream-scm-rna/for_dry_run"
         bedpe_truth = os.path.join(path,"sim1a_30m_truth.bedpe")
