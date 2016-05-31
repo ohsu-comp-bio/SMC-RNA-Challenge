@@ -71,7 +71,7 @@ leaderboard_tables = {}
 
 def validate(evaluation,submission,syn):
     try:
-        test = subprocess.check_call(["cwltool", "--non-strict", "--print-pre", submission])
+        test = subprocess.check_call(["cwltool", "--print-pre", submission])
     except Exception as e:
         raise ValueError("Your CWL file is not formatted correctly",e)
 
