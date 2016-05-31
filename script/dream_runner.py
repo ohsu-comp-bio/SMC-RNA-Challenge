@@ -8,6 +8,10 @@ import subprocess
 import synapseclient
 import json
 
+DREAM_RNA_BUCKET = "gs://dream-smc-rna"
+DREAM_DEBUG = ["30m","100m","100m_gt","all"]
+DREAM_TRAINING = ['sim1','sim2','sim3','sim4','sim5','sim7','sim8','sim11','sim13','sim14','sim15','sim16','sim17','sim19','sim21']
+
 def synapse_login(args):
     synapse = synapseclient.Synapse()
     if args.synapse_user is not None and args.synapse_password is not None:
@@ -83,20 +87,18 @@ def run_dream(synapse, args):
 
 def download(synapse,args):
     try:
-        subprocess.check_call(["gsutil", "ls" ,"gs://dream-smc-rna"])
+        subprocess.check_call(["gsutil", "ls" ,DREAM_RNA_BUCKET])
     except Exception as e:
         raise ValueError("You are not logged in to gcloud.  Please login by doing 'gcloud auth login' and follow the steps to have access to the google bucket")
     arguments = None
-    dry_run = ["30m","100m","100m_gt","all"]
-    training = ['sim1','sim2','sim3','sim4','sim5','sim7','sim8','sim11','sim13','sim14','sim15','sim16','sim17','sim19','sim21']
     if args.training is not None:
-        if args.training in training:
-            data = "gs://dream-smc-rna/training/%s_*" % args.training
+        if args.training in DREAM_TRAINING:
+            data = "%s/training/%s_*" % (DREAM_RNA_BUCKET, args.training)
             arguments = ["gsutil","cp",data, args.dir]
         else:
             raise ValueError("Must pass in one of these options for downloading training data: %s" % ', '.join(training))
     if args.dryrun is not None:
-        path = "gs://dream-smc-rna/for_dry_run"
+        path = DREAM_RNA_BUCKET + "/for_dry_run"
         bedpe_truth = os.path.join(path,"sim1a_30m_truth.bedpe")
         if args.dryrun == "30m":
             isoform_truth = os.path.join(path,"sim_diploid_30m.sim.isoforms.results_truth")
@@ -111,15 +113,15 @@ def download(synapse,args):
             isoform_truth = os.path.join(path,"*isoforms*")
             data = os.path.join(path,"*merged*")
         else:
-            raise ValueError("Must pass in one of these options for downloading training data: %s" % ', '.join(dry_run))
+            raise ValueError("Must pass in one of these options for downloading training data: %s" % ', '.join(DREAM_DEBUG))
         arguments = ["gsutil","cp",bedpe_truth,isoform_truth,data,args.dir]
     print arguments
     if arguments is not None:
         subprocess.check_call(arguments)
     else:
         print("You did not pick any training or dry run data to download")
-        print("For debugging data: --dryrun [%s]" % (",".join(dry_run)))
-        print("For training data: --training [%s]" % (",".join(training)))
+        print("For debugging data: --dryrun [%s]" % (",".join(DREAM_DEBUG)))
+        print("For training data: --training [%s]" % (",".join(DREAM_TRAINING)))
 
 
 def perform_main(args):
