@@ -91,32 +91,35 @@ def download(synapse,args):
     training = ['sim1','sim2','sim3','sim4','sim5','sim7','sim8','sim11','sim13','sim14','sim15','sim16','sim17','sim19','sim21']
     if args.training is not None:
         if args.training in training:
-            data = "gs://dream-scm-rna/training/%s_*" % args.training
+            data = "gs://dream-smc-rna/training/%s_*" % args.training
             arguments = ["gsutil","cp",data, args.dir]
         else:
             raise ValueError("Must pass in one of these options for downloading training data: %s" % ', '.join(training))
     if args.dryrun is not None:
-        path = "gs://dream-scm-rna/for_dry_run"
+        path = "gs://dream-smc-rna/for_dry_run"
         bedpe_truth = os.path.join(path,"sim1a_30m_truth.bedpe")
-        if args.training == "30m":
+        if args.dryrun == "30m":
             isoform_truth = os.path.join(path,"sim_diploid_30m.sim.isoforms.results_truth")
             data =  os.path.join(path,"sim1a_30m_merged_*")
-        elif args.training == "100m":
+        elif args.dryrun == "100m":
             isoform_truth = os.path.join(path,"sim_diploid_100m.sim.isoforms.results_truth")
             data =  os.path.join(path,"sim1a_100m_merged_*") 
-        elif args.training == "100m_gt":
+        elif args.dryrun == "100m_gt":
             isoform_truth = os.path.join(path,"sim_diploid_100m_gt1.sim.isoforms.results_truth")
             data =  os.path.join(path,"sim1a_100m_gt1_merged_*")
-        elif args.training == "all":
+        elif args.dryrun == "all":
             isoform_truth = os.path.join(path,"*isoforms*")
             data = os.path.join(path,"*merged*")
         else:
             raise ValueError("Must pass in one of these options for downloading training data: %s" % ', '.join(dry_run))
         arguments = ["gsutil","cp",bedpe_truth,isoform_truth,data,args.dir]
+    print arguments
     if arguments is not None:
         subprocess.check_call(arguments)
     else:
         print("You did not pick any training or dry run data to download")
+        print("For debugging data: --dryrun [%s]" % (",".join(dry_run)))
+        print("For training data: --training [%s]" % (",".join(training)))
 
 
 def perform_main(args):
@@ -150,7 +153,7 @@ if __name__ == '__main__':
         help='download dry run data: 30m, 100m, 100m_gt')
     parser_download.add_argument('--dir', default="./", type=str, 
         help='Directory to download files to')
-    parser_run.set_defaults(func=download)
+    parser_download.set_defaults(func=download)
 
     args = parser.parse_args()
     perform_main(args)
