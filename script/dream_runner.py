@@ -33,10 +33,10 @@ def load_cwl(cwlpath):
 
     return cwl
 
-##Change this code
+
 def find_synapse_data(cwl):
-    input = filter(lambda input: input.get('synData', None) is not None, cwl['inputs'])[0]
-    return input['synData']
+    input = filter(lambda input: input.get('class', None) == "Workflow", cwl['$graph'])[0]
+    return input['hints'][0]['entity']
 
 def call_cwl(tool, inputs):
     arguments = ["cwl-runner",
