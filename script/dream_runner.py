@@ -98,7 +98,7 @@ def download(synapse,args):
     if args.dryrun is not None:
         path = "gs://dream-scm-rna/for_dry_run"
         bedpe_truth = os.path.join(path,"sim1a_30m_truth.bedpe")
-        if args.training == "30m"
+        if args.training == "30m":
             isoform_truth = os.path.join(path,"sim_diploid_30m.sim.isoforms.results_truth")
             data =  os.path.join(path,"sim1a_30m_merged_*")
         elif args.training == "100m":
