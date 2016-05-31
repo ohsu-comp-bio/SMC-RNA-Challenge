@@ -200,14 +200,13 @@ def merge(syn, args):
         #If CWL workflow isn't merged, then merge them
         newFileName = '%s_%s_merged.cwl' % (os.path.join(outputDirectory,fileName),str(time.time()).split('.')[0])
         if "$graph" not in docs:
-            os.system('cwltool --pack %s > %s' % (args.CWLfile,newFileName)
+            os.system('cwltool --pack %s > %s') % (args.CWLfile,newFileName)
         else:
             shutil.copy(args.CWLfile, newFileName)
             print("CWL files are already merged")
     os.remove(workflowjson)
     print("Merged workflow: %s" % newFileName)
     return(newFileName)
-
 
 
 if __name__ == "__main__":
