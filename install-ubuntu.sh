@@ -9,7 +9,7 @@ if [ "$?" != "0" ]; then
   sudo usermod -aG docker $USER
 fi
 
-sudo pip install cwltool
+sudo pip install cwltool cwl-runner
 sudo pip install synapseclient
 git clone https://github.com/Sage-Bionetworks/SMC-RNA-Examples.git
 

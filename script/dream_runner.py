@@ -6,6 +6,7 @@ import shutil
 import argparse
 import subprocess
 import traceback
+import tempfile
 import synapseclient
 import json
 
@@ -187,7 +188,27 @@ def run_test(syn,args):
         for k, v in custom_inputs.items():
             in_req[k] = v
         print json.dumps(in_req, indent=4)
-    
+        
+        
+        
+        cmd = ["cwl-runner",
+                     "--cachedir", "./",
+                     #"--tmpdir-prefix", "./",
+                     #"--tmp-outdir-prefix", "./",
+                     args.workflow]
+        tmp = tempfile.NamedTemporaryFile(dir="./", prefix="dream_runner_input_", suffix=".json", delete=False)
+        tmp.write(json.dumps(in_req))
+        cmd.append(tmp.name)
+        try:
+            print "Running: %s" % (" ".join(cmd))
+            process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+            output, error = process.communicate()
+            temp = json.loads(output)
+            print temp
+            #return(temp['output']['path'])
+        except Exception, e:
+            traceback.print_exc()
+            print("Unable to call cwltool")
         
             
 def perform_main(args):
