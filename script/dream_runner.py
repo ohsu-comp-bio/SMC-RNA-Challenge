@@ -5,11 +5,11 @@ import yaml
 import shutil
 import argparse
 import subprocess
+import traceback
 import synapseclient
 import json
 
 DREAM_RNA_BUCKET = "gs://dream-smc-rna"
-#DREAM_DEBUG = ["30m","100m","100m_gt","all"]
 DREAM_TRAINING = ['sim1','sim2','sim3','sim4','sim5','sim7','sim8','sim11','sim13','sim14','sim15','sim16','sim17','sim19','sim21']
 DREAM_DEBUG = ["dryrun1","dryrun2","dryrun3","dryrun4","dryrun5"]
 
@@ -157,16 +157,28 @@ def run_test(syn,args):
                 "path" : ent.path
             }
             
-    if args.input in DREAM_TRAINING:
+    if args.input in DREAM_TRAINING or args.input in DREAM_DEBUG:
         print("Caching Inputs files")
         for suf in FILE_SUFFIX:
             local_path = os.path.join(args.data, args.input + suf )
             if not os.path.exists(local_path):
-                data = "%s/training/%s_*" % (DREAM_RNA_BUCKET, args.input)
+                if args.input in DREAM_TRAINING:
+                    data = "%s/training/%s_*" % (DREAM_RNA_BUCKET, args.input)
+                if args.input in DREAM_DEBUG:
+                    data = "%s/debugging/%s_*" % (DREAM_RNA_BUCKET, args.input)                    
                 cmd = ["gsutil","cp", data, args.data]
                 subprocess.check_call(cmd)
         
-        in_req = {}
+        in_req = {
+            "TUMOR_FASTQ_1" : {
+                "class" : "File",
+                "path" : os.path.abspath(os.path.join(args.data, args.input + "_mergeSort_1.fq.gz"))
+            },
+            "TUMOR_FASTQ_2" : {
+                "class" : "File",
+                "path" : os.path.abspath(os.path.join(args.data, args.input + "_mergeSort_2.fq.gz"))
+            }            
+        }
         for k, v in REFERENCE_DATA.items():
             in_req[k] = {
                 "class" : "File",
@@ -175,6 +187,8 @@ def run_test(syn,args):
         for k, v in custom_inputs.items():
             in_req[k] = v
         print json.dumps(in_req, indent=4)
+    
+        
             
 def perform_main(args):
     synapse = synapse_login(args)
@@ -182,6 +196,7 @@ def perform_main(args):
         try:
             args.func(synapse,args)
         except Exception as ex:
+            print traceback.print_exc()
             print(ex)
 
 if __name__ == '__main__':
