@@ -108,21 +108,6 @@ def download(synapse,args):
         else:
             raise ValueError("Must pass in one of these options for downloading training data: %s" % ', '.join(training))
     if args.dryrun is not None:
-        #path = DREAM_RNA_BUCKET + "/for_dry_run"
-        #bedpe_truth = os.path.join(path,"sim1a_30m_truth.bedpe")
-        # if args.dryrun == "30m":
-        #     isoform_truth = os.path.join(path,"sim_diploid_30m.sim.isoforms.results_truth")
-        #     data =  os.path.join(path,"sim1a_30m_merged_*")
-        # elif args.dryrun == "100m":
-        #     isoform_truth = os.path.join(path,"sim_diploid_100m.sim.isoforms.results_truth")
-        #     data =  os.path.join(path,"sim1a_100m_merged_*") 
-        # elif args.dryrun == "100m_gt":
-        #     isoform_truth = os.path.join(path,"sim_diploid_100m_gt1.sim.isoforms.results_truth")
-        #     data =  os.path.join(path,"sim1a_100m_gt1_merged_*")
-        # elif args.dryrun == "all":
-        #     isoform_truth = os.path.join(path,"*isoforms*")
-        #     data = os.path.join(path,"*merged*")
-        # else:
         if args.dryrun in DREAM_DEBUG:
             data = "%s/for_dry_run/%s_*" % (DREAM_RNA_BUCKET, args.dryrun)
             dryrun = ["gsutil","cp", data, args.dir]
