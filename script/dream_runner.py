@@ -12,6 +12,13 @@ DREAM_RNA_BUCKET = "gs://dream-smc-rna"
 DREAM_DEBUG = ["30m","100m","100m_gt","all"]
 DREAM_TRAINING = ['sim1','sim2','sim3','sim4','sim5','sim7','sim8','sim11','sim13','sim14','sim15','sim16','sim17','sim19','sim21']
 
+REFERENCE_DATA = {
+    "REFERENCE_GENOME" : "Homo_sapiens.GRCh37.75.dna_sm.primary_assembly.fa",
+    "REFERENCE_GTF" : "Homo_sapiens.GRCh37.75.gtf"
+}
+
+FILE_SUFFIX = ["_filtered.bedpe", "_isoforms_truth.txt", "_mergeSort_1.fq.gz", "_mergeSort_2.fq.gz"]
+
 def synapse_login(args):
     synapse = synapseclient.Synapse()
     if args.synapse_user is not None and args.synapse_password is not None:
@@ -123,7 +130,45 @@ def download(synapse,args):
         print("For debugging data: --dryrun [%s]" % (",".join(DREAM_DEBUG)))
         print("For training data: --training [%s]" % (",".join(DREAM_TRAINING)))
 
-
+def run_test(syn,args):
+    
+    for ref in REFERENCE_DATA.values():
+        if not os.path.exists(os.path.join(args.data, ref)):
+            cmd = ["gsutil", "cp", "%s/%s.gz" % (DREAM_RNA_BUCKET, ref), args.data]
+            subprocess.check_call(cmd)
+            cmd = ["gunzip", os.path.join(args.data, "%s.gz" % (ref))]
+            subprocess.check_call(cmd)
+        
+    with open(args.workflow) as handle:
+        doc = yaml.load(handle.read())
+    custom_inputs = {}
+    for hint in doc.get("hints", []):
+        if 'synData' == hint.get("class", ""):
+            ent = syn.get(hint['entity'])
+            custom_inputs[hint['input']] = {
+                "class" : "File",
+                "path" : ent.path
+            }
+            
+    if args.input in DREAM_TRAINING:
+        print("Caching Inputs files")
+        for suf in FILE_SUFFIX:
+            local_path = os.path.join(args.data, args.input + suf )
+            if not os.path.exists(local_path):
+                data = "%s/training/%s_*" % (DREAM_RNA_BUCKET, args.input)
+                cmd = ["gsutil","cp", data, args.data]
+                subprocess.check_call(cmd)
+        
+        in_req = {}
+        for k, v in REFERENCE_DATA.items():
+            in_req[k] = {
+                "class" : "File",
+                "path" : os.path.abspath(os.path.join(args.data, v))
+            }
+        for k, v in custom_inputs.items():
+            in_req[k] = v
+        print json.dumps(in_req, indent=4)
+            
 def perform_main(args):
     synapse = synapse_login(args)
     if 'func' in args:
@@ -150,12 +195,17 @@ if __name__ == '__main__':
     
     parser_download = subparsers.add_parser('download',help='Downloads training and dry-run data')
     parser_download.add_argument('--training', default=None, type=str, 
-        help='download training data: sim1, sim2, sim3, sim4, sim5, sim7, sim8, sim11, sim13, sim14, sim15, sim16, sim17, sim19, sim21')
+        help='download training data: %s' % ( ", ".join(DREAM_TRAINING)))
     parser_download.add_argument('--dryrun', default=None, type=str, 
-        help='download dry run data: 30m, 100m, 100m_gt')
+        help='download dry run data: %s' % (", ".join(DREAM_DEBUG)))
     parser_download.add_argument('--dir', default="./", type=str, 
         help='Directory to download files to')
     parser_download.set_defaults(func=download)
-
+    
+    parser_test = subparsers.add_parser('test',help='Downloads training and dry-run data')
+    parser_test.add_argument("--data", default="./")
+    parser_test.add_argument("input")
+    parser_test.add_argument("workflow")
+    parser_test.set_defaults(func=run_test)
     args = parser.parse_args()
     perform_main(args)
