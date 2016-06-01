@@ -9,8 +9,9 @@ import synapseclient
 import json
 
 DREAM_RNA_BUCKET = "gs://dream-smc-rna"
-DREAM_DEBUG = ["30m","100m","100m_gt","all"]
+#DREAM_DEBUG = ["30m","100m","100m_gt","all"]
 DREAM_TRAINING = ['sim1','sim2','sim3','sim4','sim5','sim7','sim8','sim11','sim13','sim14','sim15','sim16','sim17','sim19','sim21']
+DREAM_DEBUG = ["dryrun1","dryrun2","dryrun3","dryrun4","dryrun5"]
 
 REFERENCE_DATA = {
     "REFERENCE_GENOME" : "Homo_sapiens.GRCh37.75.dna_sm.primary_assembly.fa",
@@ -97,35 +98,41 @@ def download(synapse,args):
         subprocess.check_call(["gsutil", "ls" ,DREAM_RNA_BUCKET])
     except Exception as e:
         raise ValueError("You are not logged in to gcloud.  Please login by doing 'gcloud auth login' and follow the steps to have access to the google bucket")
-    arguments = None
+    training = None
+    dryrun = None
     if args.training is not None:
         if args.training in DREAM_TRAINING:
             data = "%s/training/%s_*" % (DREAM_RNA_BUCKET, args.training)
-            arguments = ["gsutil","cp",data, args.dir]
+            training = ["gsutil","cp",data, args.dir]
         else:
             raise ValueError("Must pass in one of these options for downloading training data: %s" % ', '.join(training))
     if args.dryrun is not None:
-        path = DREAM_RNA_BUCKET + "/for_dry_run"
-        bedpe_truth = os.path.join(path,"sim1a_30m_truth.bedpe")
-        if args.dryrun == "30m":
-            isoform_truth = os.path.join(path,"sim_diploid_30m.sim.isoforms.results_truth")
-            data =  os.path.join(path,"sim1a_30m_merged_*")
-        elif args.dryrun == "100m":
-            isoform_truth = os.path.join(path,"sim_diploid_100m.sim.isoforms.results_truth")
-            data =  os.path.join(path,"sim1a_100m_merged_*") 
-        elif args.dryrun == "100m_gt":
-            isoform_truth = os.path.join(path,"sim_diploid_100m_gt1.sim.isoforms.results_truth")
-            data =  os.path.join(path,"sim1a_100m_gt1_merged_*")
-        elif args.dryrun == "all":
-            isoform_truth = os.path.join(path,"*isoforms*")
-            data = os.path.join(path,"*merged*")
+        #path = DREAM_RNA_BUCKET + "/for_dry_run"
+        #bedpe_truth = os.path.join(path,"sim1a_30m_truth.bedpe")
+        # if args.dryrun == "30m":
+        #     isoform_truth = os.path.join(path,"sim_diploid_30m.sim.isoforms.results_truth")
+        #     data =  os.path.join(path,"sim1a_30m_merged_*")
+        # elif args.dryrun == "100m":
+        #     isoform_truth = os.path.join(path,"sim_diploid_100m.sim.isoforms.results_truth")
+        #     data =  os.path.join(path,"sim1a_100m_merged_*") 
+        # elif args.dryrun == "100m_gt":
+        #     isoform_truth = os.path.join(path,"sim_diploid_100m_gt1.sim.isoforms.results_truth")
+        #     data =  os.path.join(path,"sim1a_100m_gt1_merged_*")
+        # elif args.dryrun == "all":
+        #     isoform_truth = os.path.join(path,"*isoforms*")
+        #     data = os.path.join(path,"*merged*")
+        # else:
+        if args.dryrun in DREAM_DEBUG:
+            data = "%s/for_dry_run/%s_*" % (DREAM_RNA_BUCKET, args.dryrun)
+            dryrun = ["gsutil","cp", data, args.dir]
         else:
-            raise ValueError("Must pass in one of these options for downloading training data: %s" % ', '.join(DREAM_DEBUG))
-        arguments = ["gsutil","cp",bedpe_truth,isoform_truth,data,args.dir]
-    print arguments
-    if arguments is not None:
-        subprocess.check_call(arguments)
-    else:
+            raise ValueError("Must pass in one of these options for downloading debugging data: %s" % ', '.join(DREAM_DEBUG))
+    
+    if training is not None:
+        subprocess.check_call(training)
+    if dryrun is not None:
+        subprocess.check_call(dryrun)
+    if training is None and dryrun is None:
         print("You did not pick any training or dry run data to download")
         print("For debugging data: --dryrun [%s]" % (",".join(DREAM_DEBUG)))
         print("For training data: --training [%s]" % (",".join(DREAM_TRAINING)))
@@ -203,9 +210,12 @@ if __name__ == '__main__':
     parser_download.set_defaults(func=download)
     
     parser_test = subparsers.add_parser('test',help='Downloads training and dry-run data')
-    parser_test.add_argument("--data", default="./")
-    parser_test.add_argument("input")
-    parser_test.add_argument("workflow")
+    parser_test.add_argument("--data", type=str, default="./",
+        help='Directory to download data to')
+    parser_test.add_argument("input", type = str,
+        help='Training dataset to use: %s' % ( ", ".join(DREAM_TRAINING)))
+    parser_test.add_argument("workflow", type = str,
+        help='Non merged workflow file')
     parser_test.set_defaults(func=run_test)
     args = parser.parse_args()
     perform_main(args)
