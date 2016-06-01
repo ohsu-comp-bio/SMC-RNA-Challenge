@@ -183,6 +183,7 @@ def run_test(syn,args):
                      args.workflow]
         tmp = tempfile.NamedTemporaryFile(dir="./", prefix="dream_runner_input_", suffix=".json", delete=False)
         tmp.write(json.dumps(in_req))
+        tmp.close()
         cmd.append(tmp.name)
         try:
             print "Running: %s" % (" ".join(cmd))
