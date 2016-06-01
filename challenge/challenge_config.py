@@ -90,7 +90,7 @@ def validate(evaluation,submission,syn):
         workflowinputs = []
         workflowoutputs = []
         merged = docs['$graph']
-        synId = None
+        custom_inputs = dict()
         for tools in merged:
             if tools['class'] == 'CommandLineTool':
                 for i in tools['inputs']:
@@ -101,33 +101,39 @@ def validate(evaluation,submission,syn):
                 #Check: Workflow class
                 assert tools['class'] == 'Workflow', 'CWL Classes can only be named "Workflow" or "CommandLineTool'
                 workflow = tools
+        #Check: Make sure hints for index files are formatted correctly
+        hints = workflow.get("hints",None)
+        if hints is not None:
+            for i in hints:
+                if os.path.basename(i['class']) == "synData":
+                    assert i.get('input', None) is not None or \
+                           i.get('entity', None) is not None, """synData hint must be in this format:
+                                                                            hints:
+                                                                              - class: synData
+                                                                                input: index
+                                                                                entity: syn12345
+                                                              """
+                    custom_inputs[i['input']] = i['entity']
 
         for i in workflow['inputs']:
             workflowinputs.append("%s" % i['id'])
+            if os.path.basename(i['id']) not in PROVIDED:
+                assert custom_inputs.get(os.path.basename(i['id']),None) is not None, "Custom inputs do not match hints"
+                #Check: if synData is used, they must have the correct ACL's
+                indexFiles = syn.get(custom_inputs.get(os.path.basename(i['id']),None),downloadFile=False)
+                acls = syn._getACL(indexFiles)
+                for acl in acls['resourceAccess']:
+                    if acl['principalId'] == CHALLENGE_ADMIN_TEAM_ID:
+                        assert 'READ' in acl['accessType'], "At least View/READ access has to be given to the SMC_RNA_Admins Team: (Team ID: 3322844)"
 
-        hints = workflow.get("hints",None)
-        if hints is not None:
-            synId = hints[0].get('entity',None)
-        else:
-            synId = None
-        #Check: synData must exist as an input (tarball of the index files)
-        if synId is None:
-            raise ValueError("""Must have synData (This is the synapse ID of the tarball of your index files) as a hint in the following format:
-                                hints:
-                                  - class: synData
-                                    input: index
-                                    entity: syn12345
-                             """)
-        else:
-            indexFiles = syn.get(synId,downloadFile=False)
-            acls = syn._getACL(indexFiles)
-            for acl in acls['resourceAccess']:
-                if acl['principalId'] == CHALLENGE_ADMIN_TEAM_ID:
-                    assert 'READ' in acl['accessType'], "At least View/READ access has to be given to the SMC_RNA_Admins Team: (Team ID: 3322844)"
-        #Check: Must contain these four inputs in workflow step
+        #Check: Must contain at least tumor fastq1, 2 as inputs in workflow step
         for i in ["TUMOR_FASTQ_1","TUMOR_FASTQ_2"]:
             required = "#main/%s" % i
             assert required in workflowinputs, "Your workflow MUST contain at least these two inputs: 'TUMOR_FASTQ_1','TUMOR_FASTQ_2'"
+        #Check: If all workflow inputs map to the custom or provided ids
+        if len(workflowinputs) > (len(custom_inputs) + 2):
+            for i in workflowinputs:
+                assert os.path.basename(i) in PROVIDED or os.path.basename(i) in custom_inputs, "Your specified input ids must be one of: %s" %  ", ".join(custom_inputs.keys()+PROVIDED)
         for i in workflow['steps']:
             for y in i['outputs']:
                 workflowoutputs.append("%s" % y['id'])
