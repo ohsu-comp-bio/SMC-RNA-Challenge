@@ -58,10 +58,20 @@ def call_cwl(tool, inputs):
                  # "--tmp-outdir-prefix", "/data/tmp",
                  tool]
     arguments.extend(inputs)
-    process = subprocess.Popen(arguments,stdout=subprocess.PIPE)
-    output = process.stdout.read()
-    temp = json.loads(output)
-    return(temp['output']['path'])
+    #process = subprocess.Popen(arguments,stdout=subprocess.PIPE)
+    #output = process.stdout.read()
+    #temp = json.loads(output)
+    try:
+        print "Running: %s" % (" ".join(arguments))
+        process = subprocess.Popen(arguments, stdout=subprocess.PIPE)
+        output, error = process.communicate()
+        temp = json.loads(output)
+        print temp
+        return(temp['output']['path'])
+    except Exception, e:
+        traceback.print_exc()
+        print("Unable to call cwltool")
+    #return(temp['output']['path'])
 
 def call_workflow(cwl, fastq1, fastq2, index_path):
     inputs = ["--index", index_path,
@@ -174,28 +184,41 @@ def run_test(syn,args):
             in_req[k] = v
         print json.dumps(in_req, indent=4)
         
-        
-        
-        cmd = ["cwl-runner",
-                     "--cachedir", "./",
+        #cmd = ["cwl-runner",
+        #             "--cachedir", "./",
                      #"--tmpdir-prefix", "./",
                      #"--tmp-outdir-prefix", "./",
-                     args.workflow]
+        #             args.workflow]
         tmp = tempfile.NamedTemporaryFile(dir="./", prefix="dream_runner_input_", suffix=".json", delete=False)
         tmp.write(json.dumps(in_req))
         tmp.close()
-        cmd.append(tmp.name)
-        try:
-            print "Running: %s" % (" ".join(cmd))
-            process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-            output, error = process.communicate()
-            temp = json.loads(output)
-            print temp
-            #return(temp['output']['path'])
-        except Exception, e:
-            traceback.print_exc()
-            print("Unable to call cwltool")
+        workflow_out = call_cwl(args.workflow, [tmp.name])
+        if arg.challenge == "fusion":
+            cwl = os.path.join(os.path.dirname(__file__),"..","FusionDetection","cwl","FusionEvalWorkflow.cwl")
+            truth = os.path.abspath(os.path.join(args.data, args.input + "_filtered.bedpe"))
+            annots = syn.get("syn5908245")
+            annotations = annots.path
+        elif args.challenge == "isoform":
+            cwl = os.path.join(os.path.dirname(__file__),"..","IsoformQuantification","cwl","QuantificationEvalWorkflow.cwl")
+            truth = os.path.abspath(os.path.join(args.data, args.input + "_isoforms_truth.txt"))
+            annotations = os.path.abspath(os.path.join(args.data, args.input + "Homo_sapiens.GRCh37.75.gtf"))
+        else:
+            raise ValueError("Please pick either 'fusion' or 'isoform' for challenges")
+        call_evaluation(cwl, workflow_out, truth, annotations)
+        #cmd.append(tmp.name)
+        # try:
+        #     print "Running: %s" % (" ".join(cmd))
+        #     process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+        #     output, error = process.communicate()
+        #     temp = json.loads(output)
+        #     print temp
+        #     call_evaluation(cwl, workflow_output, truth, annotations)
+        #     #return(temp['output']['path'])
+        # except Exception, e:
+        #     traceback.print_exc()
+        #     print("Unable to call cwltool")
         
+
             
 def perform_main(args):
     synapse = synapse_login(args)
@@ -234,10 +257,12 @@ if __name__ == '__main__':
     parser_test = subparsers.add_parser('test',help='Downloads training and dry-run data')
     parser_test.add_argument("--data", type=str, default="./",
         help='Directory to download data to')
-    parser_test.add_argument("input", type = str,
+    parser_test.add_argument("--input", type = str,
         help='Training dataset to use: %s' % ( ", ".join(DREAM_TRAINING)))
-    parser_test.add_argument("workflow", type = str,
+    parser_test.add_argument("--workflow", type = str,
         help='Non merged workflow file')
+    parser_test.add_argument("--challenge", type = str,
+        help='Choose the challenge question: fusion or isoform')
     parser_test.set_defaults(func=run_test)
     args = parser.parse_args()
     perform_main(args)
