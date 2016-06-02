@@ -21,7 +21,7 @@ inputs:
 
 outputs:
 
-  - id: output
+  - id: OUTPUT
     type: ["null",File]
     source: "#evaluator/output"
 
