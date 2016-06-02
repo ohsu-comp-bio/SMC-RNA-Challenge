@@ -124,10 +124,10 @@ def download(synapse,args):
 def run_test(syn,args):
     
     for ref in REFERENCE_DATA.values():
-        if not os.path.exists(os.path.join(args.data, ref)):
-            cmd = ["gsutil", "cp", "%s/%s.gz" % (DREAM_RNA_BUCKET, ref), args.data]
+        if not os.path.exists(os.path.join(args.dir, ref)):
+            cmd = ["gsutil", "cp", "%s/%s.gz" % (DREAM_RNA_BUCKET, ref), args.dir]
             subprocess.check_call(cmd)
-            cmd = ["gunzip", os.path.join(args.data, "%s.gz" % (ref))]
+            cmd = ["gunzip", os.path.join(args.dir, "%s.gz" % (ref))]
             subprocess.check_call(cmd)
         
     with open(args.workflow) as handle:
