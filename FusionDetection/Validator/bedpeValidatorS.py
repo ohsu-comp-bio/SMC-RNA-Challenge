@@ -196,7 +196,7 @@ def main(argv):
         return 1        
     get_valid_name_length(inChrFile)
     validate_file(inResFile)
-    remove_duplicate()
+    #remove_duplicate()
     print "Validated" 
     return 0
 
