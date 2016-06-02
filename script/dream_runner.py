@@ -51,16 +51,14 @@ def find_synapse_data(cwl):
     input = filter(lambda input: input.get('class', None) == "Workflow", cwl['$graph'])[0]
     return input['hints'][0]['entity']
 
-def call_cwl(tool, inputs):
-    arguments = ["cwl-runner",
-                 "--cachedir", "cwl-cache",
-                 # "--tmpdir-prefix", "/data/tmp",
-                 # "--tmp-outdir-prefix", "/data/tmp",
-                 tool]
+def call_cwl(tool, inputs, nocache):
+    if nocache:
+        arguments = ["cwl-runner",tool]
+    else:
+        arguments = ["cwl-runner",
+                     "--cachedir", "cwl-cache",
+                     tool]
     arguments.extend(inputs)
-    #process = subprocess.Popen(arguments,stdout=subprocess.PIPE)
-    #output = process.stdout.read()
-    #temp = json.loads(output)
     try:
         print "Running: %s" % (" ".join(arguments))
         process = subprocess.Popen(arguments, stdout=subprocess.PIPE)
@@ -165,7 +163,7 @@ def run_test(syn,args):
     tmp = tempfile.NamedTemporaryFile(dir=args.dir, prefix="dream_runner_input_", suffix=".json", delete=False)
     tmp.write(json.dumps(in_req))
     tmp.close()
-    workflow_out = call_cwl(args.workflow, [tmp.name])
+    workflow_out = call_cwl(args.workflow, [tmp.name], args.no-cache)
     if args.challenge == "fusion":
         cwl = os.path.join(os.path.dirname(__file__),"..","FusionDetection","cwl","FusionEvalWorkflow.cwl")
         truth = os.path.abspath(os.path.join(args.dir, args.input + "_filtered.bedpe"))
@@ -205,7 +203,7 @@ if __name__ == '__main__':
     parser_run.set_defaults(func=run_dream)
     
     parser_download = subparsers.add_parser('download',help='Downloads training and dry-run data')
-    parser_download.add_argument('input', type=str, required=True,
+    parser_download.add_argument('input', type=str,
         help='download training or dry data: %s' % ( ", ".join(DREAM_TRAINING+DREAM_DEBUG)))
     #parser_download.add_argument('--dryrun', default=None, type=str, 
     #    help='download dry run data: %s' % (", ".join(DREAM_DEBUG)))
@@ -216,12 +214,14 @@ if __name__ == '__main__':
     parser_test = subparsers.add_parser('test',help='Downloads training and dry-run data')
     parser_test.add_argument("--dir", type=str, default="./",
         help='Directory to download data to')
-    parser_test.add_argument("input", type = str, required=True,
+    parser_test.add_argument("input", type = str,
         help='Training dataset to use: %s' % ( ", ".join(DREAM_TRAINING)))
-    parser_test.add_argument("workflow", type = str,required=True,
+    parser_test.add_argument("workflow", type = str,
         help='Non merged workflow file')
-    parser_test.add_argument("challenge", type = str,required=True,
+    parser_test.add_argument("challenge", type = str,
         help='Choose the challenge question: fusion or isoform')
+    parser_test.add_argument("--no-cache", type = bool, default=False,
+        help='Do not cache workflow steps')
     #Add in --no-cache
     parser_test.set_defaults(func=run_test)
     args = parser.parse_args()
