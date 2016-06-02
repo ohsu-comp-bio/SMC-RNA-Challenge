@@ -218,9 +218,8 @@ if __name__ == '__main__':
         help='Non merged workflow file')
     parser_test.add_argument("challenge", type = str,
         help='Choose the challenge question: fusion or isoform')
-    parser_test.add_argument("--no-cache", type = bool, default=False,
+    parser_test.add_argument("--no-cache", action='store_true',
         help='Do not cache workflow steps')
-    #Add in --no-cache
     parser_test.set_defaults(func=run_test)
     args = parser.parse_args()
     perform_main(args)
