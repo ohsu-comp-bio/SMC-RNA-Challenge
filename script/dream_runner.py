@@ -51,7 +51,7 @@ def find_synapse_data(cwl):
     input = filter(lambda input: input.get('class', None) == "Workflow", cwl['$graph'])[0]
     return input['hints'][0]['entity']
 
-def call_cwl(tool, inputs, nocache):
+def call_cwl(tool, inputs, nocache=False):
     if nocache:
         arguments = ["cwl-runner",tool]
     else:
