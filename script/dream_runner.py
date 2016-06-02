@@ -216,11 +216,11 @@ if __name__ == '__main__':
     parser_test = subparsers.add_parser('test',help='Downloads training and dry-run data')
     parser_test.add_argument("--dir", type=str, default="./",
         help='Directory to download data to')
-    parser_test.add_argument("--input", type = str, required=True,
+    parser_test.add_argument("input", type = str, required=True,
         help='Training dataset to use: %s' % ( ", ".join(DREAM_TRAINING)))
-    parser_test.add_argument("--workflow", type = str,required=True,
+    parser_test.add_argument("workflow", type = str,required=True,
         help='Non merged workflow file')
-    parser_test.add_argument("--challenge", type = str,required=True,
+    parser_test.add_argument("challenge", type = str,required=True,
         help='Choose the challenge question: fusion or isoform')
     #Add in --no-cache
     parser_test.set_defaults(func=run_test)
