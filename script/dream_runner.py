@@ -205,8 +205,6 @@ if __name__ == '__main__':
     parser_download = subparsers.add_parser('download',help='Downloads training and dry-run data')
     parser_download.add_argument('input', type=str,
         help='download training or dry data: %s' % ( ", ".join(DREAM_TRAINING+DREAM_DEBUG)))
-    #parser_download.add_argument('--dryrun', default=None, type=str, 
-    #    help='download dry run data: %s' % (", ".join(DREAM_DEBUG)))
     parser_download.add_argument('--dir', default="./", type=str, 
         help='Directory to download files to')
     parser_download.set_defaults(func=download)
