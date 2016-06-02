@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+
 import sys
 import os
 import math
@@ -262,6 +264,6 @@ if __name__ == '__main__':
     
     validate_file(inResFile)
    
-    remove_duplicate()
+    #remove_duplicate()
 
     print_to_file(outResFile) 
