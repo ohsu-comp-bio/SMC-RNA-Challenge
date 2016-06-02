@@ -15,6 +15,7 @@
 #include <string>
 #include <cstdlib>
 #include <cstring>
+#include <algorithm>
 
 using namespace std;
 
@@ -29,6 +30,7 @@ class Bedpe
         bedpe_t getBedpe(int i){ return bedpevec[i];}
         int getPos(bedpe_t & tt, uint32_t & tt_pos5, uint32_t & tt_pos3);
         int printBedpe(char * file);
+        int uniq();
 };
 
 

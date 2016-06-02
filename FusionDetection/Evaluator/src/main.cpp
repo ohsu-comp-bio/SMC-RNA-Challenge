@@ -21,7 +21,7 @@ map<int,char> intChar;
 map<char,char> charChar;
 map<string,char> tableAmino;
 
-string version("0.1.2");
+string version("0.1.3");
 
 int usage()
 {
@@ -156,6 +156,9 @@ int main(int argc, char * argv[])
 
     Bedpe res;
     res.loadFromFile((char *)result_file.c_str());
+
+    cerr<<"removing duplicate results..."<<endl;
+    res.uniq();
     
     cerr<<"loading truth file..."<<endl;
 
