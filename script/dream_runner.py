@@ -53,7 +53,7 @@ def find_synapse_data(cwl):
 
 def call_cwl(tool, inputs):
     arguments = ["cwl-runner",
-                 "--cachedir", "./",
+                 "--cachedir", "cwl-cache",
                  # "--tmpdir-prefix", "/data/tmp",
                  # "--tmp-outdir-prefix", "/data/tmp",
                  tool]
@@ -67,7 +67,7 @@ def call_cwl(tool, inputs):
         output, error = process.communicate()
         temp = json.loads(output)
         print temp
-        return(temp['output']['path'])
+        return(temp['OUTPUT']['path'])
     except Exception, e:
         traceback.print_exc()
         print("Unable to call cwltool")
@@ -109,29 +109,19 @@ def download(synapse,args):
         subprocess.check_call(["gsutil", "ls" ,DREAM_RNA_BUCKET])
     except Exception as e:
         raise ValueError("You are not logged in to gcloud.  Please login by doing 'gcloud auth login' and follow the steps to have access to the google bucket")
-    training = None
-    dryrun = None
-    if args.training is not None:
-        if args.training in DREAM_TRAINING:
-            data = "%s/training/%s_*" % (DREAM_RNA_BUCKET, args.training)
-            training = ["gsutil","cp",data, args.dir]
-        else:
-            raise ValueError("Must pass in one of these options for downloading training data: %s" % ', '.join(training))
-    if args.dryrun is not None:
-        if args.dryrun in DREAM_DEBUG:
-            data = "%s/for_dry_run/%s_*" % (DREAM_RNA_BUCKET, args.dryrun)
-            dryrun = ["gsutil","cp", data, args.dir]
-        else:
-            raise ValueError("Must pass in one of these options for downloading debugging data: %s" % ', '.join(DREAM_DEBUG))
-    
-    if training is not None:
-        subprocess.check_call(training)
-    if dryrun is not None:
-        subprocess.check_call(dryrun)
-    if training is None and dryrun is None:
-        print("You did not pick any training or dry run data to download")
-        print("For debugging data: --dryrun [%s]" % (",".join(DREAM_DEBUG)))
-        print("For training data: --training [%s]" % (",".join(DREAM_TRAINING)))
+    if args.input in DREAM_TRAINING or args.input in DREAM_DEBUG:
+        print("Caching Inputs files")
+        for suf in FILE_SUFFIX:
+            local_path = os.path.join(args.dir, args.input + suf)
+            if not os.path.exists(local_path):
+                if args.input in DREAM_TRAINING:
+                    data = "%s/training/%s_*" % (DREAM_RNA_BUCKET, args.input)
+                elif args.input in DREAM_DEBUG:
+                    data = "%s/debugging/%s_*" % (DREAM_RNA_BUCKET, args.input)                    
+                cmd = ["gsutil","cp", data, args.dir]
+                subprocess.check_call(cmd)
+    else:
+        raise ValueError("Must pass in one of these options for downloading training/debugging data: %s" % ', '.join(DREAM_TRAINING + DREAM_DEBUG))
 
 def run_test(syn,args):
     
@@ -152,73 +142,42 @@ def run_test(syn,args):
                 "class" : "File",
                 "path" : ent.path
             }
-            
-    if args.input in DREAM_TRAINING or args.input in DREAM_DEBUG:
-        print("Caching Inputs files")
-        for suf in FILE_SUFFIX:
-            local_path = os.path.join(args.data, args.input + suf )
-            if not os.path.exists(local_path):
-                if args.input in DREAM_TRAINING:
-                    data = "%s/training/%s_*" % (DREAM_RNA_BUCKET, args.input)
-                if args.input in DREAM_DEBUG:
-                    data = "%s/debugging/%s_*" % (DREAM_RNA_BUCKET, args.input)                    
-                cmd = ["gsutil","cp", data, args.data]
-                subprocess.check_call(cmd)
-        
-        in_req = {
-            "TUMOR_FASTQ_1" : {
-                "class" : "File",
-                "path" : os.path.abspath(os.path.join(args.data, args.input + "_mergeSort_1.fq.gz"))
-            },
-            "TUMOR_FASTQ_2" : {
-                "class" : "File",
-                "path" : os.path.abspath(os.path.join(args.data, args.input + "_mergeSort_2.fq.gz"))
-            }            
+    download(syn, args)
+    in_req = {
+        "TUMOR_FASTQ_1" : {
+            "class" : "File",
+            "path" : os.path.abspath(os.path.join(args.dir, args.input + "_mergeSort_1.fq.gz"))
+        },
+        "TUMOR_FASTQ_2" : {
+            "class" : "File",
+            "path" : os.path.abspath(os.path.join(args.dir, args.input + "_mergeSort_2.fq.gz"))
         }
-        for k, v in REFERENCE_DATA.items():
-            in_req[k] = {
-                "class" : "File",
-                "path" : os.path.abspath(os.path.join(args.data, v))
-            }
-        for k, v in custom_inputs.items():
-            in_req[k] = v
-        print json.dumps(in_req, indent=4)
+    }
+    for k, v in REFERENCE_DATA.items():
+        in_req[k] = {
+            "class" : "File",
+            "path" : os.path.abspath(os.path.join(args.dir, v))
+        }
+    for k, v in custom_inputs.items():
+        in_req[k] = v
+    print json.dumps(in_req, indent=4)
         
-        #cmd = ["cwl-runner",
-        #             "--cachedir", "./",
-                     #"--tmpdir-prefix", "./",
-                     #"--tmp-outdir-prefix", "./",
-        #             args.workflow]
-        tmp = tempfile.NamedTemporaryFile(dir="./", prefix="dream_runner_input_", suffix=".json", delete=False)
-        tmp.write(json.dumps(in_req))
-        tmp.close()
-        workflow_out = call_cwl(args.workflow, [tmp.name])
-        if arg.challenge == "fusion":
-            cwl = os.path.join(os.path.dirname(__file__),"..","FusionDetection","cwl","FusionEvalWorkflow.cwl")
-            truth = os.path.abspath(os.path.join(args.data, args.input + "_filtered.bedpe"))
-            annots = syn.get("syn5908245")
-            annotations = annots.path
-        elif args.challenge == "isoform":
-            cwl = os.path.join(os.path.dirname(__file__),"..","IsoformQuantification","cwl","QuantificationEvalWorkflow.cwl")
-            truth = os.path.abspath(os.path.join(args.data, args.input + "_isoforms_truth.txt"))
-            annotations = os.path.abspath(os.path.join(args.data, args.input + "Homo_sapiens.GRCh37.75.gtf"))
-        else:
-            raise ValueError("Please pick either 'fusion' or 'isoform' for challenges")
-        call_evaluation(cwl, workflow_out, truth, annotations)
-        #cmd.append(tmp.name)
-        # try:
-        #     print "Running: %s" % (" ".join(cmd))
-        #     process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-        #     output, error = process.communicate()
-        #     temp = json.loads(output)
-        #     print temp
-        #     call_evaluation(cwl, workflow_output, truth, annotations)
-        #     #return(temp['output']['path'])
-        # except Exception, e:
-        #     traceback.print_exc()
-        #     print("Unable to call cwltool")
-        
-
+    tmp = tempfile.NamedTemporaryFile(dir=args.dir, prefix="dream_runner_input_", suffix=".json", delete=False)
+    tmp.write(json.dumps(in_req))
+    tmp.close()
+    workflow_out = call_cwl(args.workflow, [tmp.name])
+    if args.challenge == "fusion":
+        cwl = os.path.join(os.path.dirname(__file__),"..","FusionDetection","cwl","FusionEvalWorkflow.cwl")
+        truth = os.path.abspath(os.path.join(args.dir, args.input + "_filtered.bedpe"))
+        annots = syn.get("syn5908245")
+        annotations = annots.path
+    elif args.challenge == "isoform":
+        cwl = os.path.join(os.path.dirname(__file__),"..","IsoformQuantification","cwl","QuantificationEvalWorkflow.cwl")
+        truth = os.path.abspath(os.path.join(args.dir, args.input + "_isoforms_truth.txt"))
+        annotations = os.path.abspath(os.path.join(args.dir, args.input + "Homo_sapiens.GRCh37.75.gtf"))
+    else:
+        raise ValueError("Please pick either 'fusion' or 'isoform' for challenges")
+    call_evaluation(cwl, workflow_out, truth, annotations)
             
 def perform_main(args):
     synapse = synapse_login(args)
@@ -246,16 +205,16 @@ if __name__ == '__main__':
     parser_run.set_defaults(func=run_dream)
     
     parser_download = subparsers.add_parser('download',help='Downloads training and dry-run data')
-    parser_download.add_argument('--training', default=None, type=str, 
-        help='download training data: %s' % ( ", ".join(DREAM_TRAINING)))
-    parser_download.add_argument('--dryrun', default=None, type=str, 
-        help='download dry run data: %s' % (", ".join(DREAM_DEBUG)))
+    parser_download.add_argument('input', type=str, required=True,
+        help='download training or dry data: %s' % ( ", ".join(DREAM_TRAINING+DREAM_DEBUG)))
+    #parser_download.add_argument('--dryrun', default=None, type=str, 
+    #    help='download dry run data: %s' % (", ".join(DREAM_DEBUG)))
     parser_download.add_argument('--dir', default="./", type=str, 
         help='Directory to download files to')
     parser_download.set_defaults(func=download)
     
     parser_test = subparsers.add_parser('test',help='Downloads training and dry-run data')
-    parser_test.add_argument("--data", type=str, default="./",
+    parser_test.add_argument("--dir", type=str, default="./",
         help='Directory to download data to')
     parser_test.add_argument("--input", type = str, required=True,
         help='Training dataset to use: %s' % ( ", ".join(DREAM_TRAINING)))
@@ -263,6 +222,7 @@ if __name__ == '__main__':
         help='Non merged workflow file')
     parser_test.add_argument("--challenge", type = str,required=True,
         help='Choose the challenge question: fusion or isoform')
+    #Add in --no-cache
     parser_test.set_defaults(func=run_test)
     args = parser.parse_args()
     perform_main(args)
