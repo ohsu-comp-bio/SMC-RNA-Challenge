@@ -71,22 +71,22 @@ def call_cwl(tool, inputs, nocache=False):
         print("Unable to call cwltool")
     #return(temp['output']['path'])
 
-def call_workflow(cwl, fastq1, fastq2, index_path):
+def call_workflow(cwl, fastq1, fastq2, index_path, nocache=False):
     inputs = ["--index", index_path,
               "--TUMOR_FASTQ_1", fastq1,
               "--TUMOR_FASTQ_2", fastq2]
 
-    output = call_cwl(cwl, inputs)
+    output = call_cwl(cwl, inputs, nocache)
     return(output)
 
-def call_evaluation(cwl, workflow_output, truth, annotations):
+def call_evaluation(cwl, workflow_output, truth, annotations, nocache=False):
     # local = "eval-workflow.cwl"
     # shutil.copyfile(cwl, local)
     inputs = ["--input", workflow_output,
               "--truth", truth,
               "--gtf", annotations]
 
-    call_cwl(cwl, inputs)
+    call_cwl(cwl, inputs, nocache)
     # os.remove(local)
 
 def run_dream(synapse, args):
@@ -163,7 +163,7 @@ def run_test(syn,args):
     tmp = tempfile.NamedTemporaryFile(dir=args.dir, prefix="dream_runner_input_", suffix=".json", delete=False)
     tmp.write(json.dumps(in_req))
     tmp.close()
-    workflow_out = call_cwl(args.workflow, [tmp.name], args.no-cache)
+    workflow_out = call_cwl(args.workflow, [tmp.name], args.no_cache)
     if args.challenge == "fusion":
         cwl = os.path.join(os.path.dirname(__file__),"..","FusionDetection","cwl","FusionEvalWorkflow.cwl")
         truth = os.path.abspath(os.path.join(args.dir, args.input + "_filtered.bedpe"))
@@ -175,7 +175,7 @@ def run_test(syn,args):
         annotations = os.path.abspath(os.path.join(args.dir, args.input + "Homo_sapiens.GRCh37.75.gtf"))
     else:
         raise ValueError("Please pick either 'fusion' or 'isoform' for challenges")
-    call_evaluation(cwl, workflow_out, truth, annotations)
+    call_evaluation(cwl, workflow_out, truth, annotations,args.no_cache)
             
 def perform_main(args):
     synapse = synapse_login(args)
