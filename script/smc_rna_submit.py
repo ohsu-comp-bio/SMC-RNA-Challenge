@@ -199,20 +199,15 @@ def merge(syn, args):
     except Exception as e:
         print(e)
 
-    workflowjson = "%s_dep.json" % os.path.join(outputDirectory,fileName)
-    os.system('cwltool --print-deps "%s" > %s' % (args.CWLfile,workflowjson))
-
     with open(args.CWLfile) as workflow:
         docs = yaml.load(workflow)
-
         #If CWL workflow isn't merged, then merge them
         newFileName = '%s_%s_merged.cwl' % (os.path.join(outputDirectory,fileName),str(time.time()).split('.')[0])
         if "$graph" not in docs:
-            os.system('cwltool --pack %s > %s') % (args.CWLfile,newFileName)
+            os.system('cwltool --pack %s > %s' % (args.CWLfile,newFileName))
         else:
             shutil.copy(args.CWLfile, newFileName)
             print("CWL files are already merged")
-    os.remove(workflowjson)
     print("Merged workflow: %s" % newFileName)
     return(newFileName)
 
@@ -220,7 +215,7 @@ def merge(syn, args):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Submit Files to the DREAM SMC-RNA challenge. Please see https://www.synapse.org/#!Synapse:syn2813589/wiki/70850 for usage instructions.')
-    #Stack.addJobTreeOptions(parser)
+
     parser.add_argument("--synapse_user", help="Synapse UserName", default=None)
     parser.add_argument("--password", help="Synapse password", default=None)
 
@@ -243,10 +238,10 @@ if __name__ == "__main__":
             help='Submit CWL file')
     parser_submit.add_argument('CWLfile',  metavar='workflow_merged.cwl', type=str,
             help='CWL workflow file')
+    parser_submit.add_argument('challenge',  metavar='fusion', type=str,
+            help='Challenge to submit to: (fusion or isoform)')
     parser_submit.add_argument('--teamName',  metavar='My Team', type=str, default = None,
             help='Challenge team name, leave blank if not part of a team')
-    parser_submit.add_argument('--challenge',  metavar='fusion', type=str, required=True,
-            help='Challenge to submit to: (fusion or isoform)')
     parser_submit.add_argument('--projectId',  metavar='syn123', type=str, default = None,
             help='Synapse Id of a project that you want the submission to be uploaded to, will create a project automatically if no projectId is specified')
     parser_submit.set_defaults(func=submit_workflow)
