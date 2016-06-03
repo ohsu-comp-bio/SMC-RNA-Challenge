@@ -16,8 +16,8 @@ dry_run = False
 
 ## Edit these URLs to point to your challenge and its support forum
 defaults = dict(
-    challenge_instructions_url = "https://www.synapse.org/",
-    support_forum_url = "http://support.sagebase.org/sagebase")
+    challenge_instructions_url = "https://www.synapse.org/#!Synapse:syn2813589/wiki/70850",
+    support_forum_url = "https://www.synapse.org/#!Synapse:syn2813589/discussion/default")
 
 ##---------------------------------------------------------
 ## Message templates:
@@ -53,6 +53,8 @@ We have received your submission to the {queue_name} and confirmed that it is co
 
 submission name: {submission_name}
 submission ID: {submission_id}
+
+Your submission will not be run until this short quiz is completed: https://docs.google.com/a/sagebase.org/forms/d/1GVp-tGc9iWPbtINDjI5fCE-mBWplXkMarkazgOZ_E00/viewform?entry.2130559807={submission_id}
 
 If you have questions, please ask on the forums at {support_forum_url} or refer to the challenge \
 instructions which can be found at {challenge_instructions_url}.
