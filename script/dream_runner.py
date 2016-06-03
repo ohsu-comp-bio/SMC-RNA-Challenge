@@ -213,7 +213,7 @@ if __name__ == '__main__':
     parser_test.add_argument("--dir", type=str, default="./",
         help='Directory to download data to')
     parser_test.add_argument("input", type = str,
-        help='Training dataset to use: %s' % ( ", ".join(DREAM_TRAINING)))
+        help='Training/debugging dataset to use: %s' % ( ", ".join(DREAM_TRAINING+DREAM_DEBUG)))
     parser_test.add_argument("workflow", type = str,
         help='Non merged workflow file')
     parser_test.add_argument("challenge", type = str,
