@@ -423,11 +423,13 @@ def archive(evaluation, destination=None, name=None, query=None):
                                 if i.get('dockerPull',None) is not None:
                                     docker.append(i['dockerPull'])
                     if tools['class'] == 'Workflow':
-                        for i in tools['inputs']:
-                            if i.get('synData',None) is not None:
-                                temp = syn.get(i['synData'])
-                                #Store index files
-                                os.system('gsutil cp %s gs://smc-rna-cache/%s/%s' % (temp.path,path,submissionId))
+                        hints = tools.get("hints",None)
+                        if hints is not None:
+                            for i in tools['hints']:
+                                if os.path.basename(i['class']) == "synData":
+                                    temp = syn.get(i['entity'])
+                                    #Store index files
+                                    os.system('gsutil cp %s gs://smc-rna-cache/%s/%s' % (temp.path,path,submissionId))
             os.system('rm -rf ~/.synapseCache/*')
             #Pull, save, and store docker containers
             docker = set(docker)
