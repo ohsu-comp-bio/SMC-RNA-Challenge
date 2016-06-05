@@ -19,6 +19,7 @@ CHALLENGE_NAME = "SMC-RNA Challenge"
 ## Synapse user IDs of the challenge admins who will be notified by email
 ## about errors in the scoring script
 ADMIN_USER_IDS = ["3324230"]
+PROVIDED = ["TUMOR_FASTQ_1","TUMOR_FASTQ_2","REFERENCE_GENOME","REFERENCE_GTF"]
 
 ## Each question in your challenge should have an evaluation queue through
 ## which participants can submit their predictions or models. The queues
