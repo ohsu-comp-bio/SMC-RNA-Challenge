@@ -7,6 +7,7 @@
 import synapseclient
 import subprocess
 import yaml
+import os
 ## A Synapse project will hold the assetts for your challenge. Put its
 ## synapse ID here, for example
 ## CHALLENGE_SYN_ID = "syn1234567"
