@@ -393,7 +393,7 @@ def archive(evaluation, destination=None, name=None, query=None):
     """
     challenge = {'5877348':'FusionDetection','5952651':'IsoformQuantification'}
     if not query:
-        query = 'select * from evaluation_%s where status=="SCORED"' % utils.id_of(evaluation)
+        query = 'select * from evaluation_%s where status=="VALIDATED"' % utils.id_of(evaluation)
     path = challenge[utils.id_of(evaluation)]
     ## for each submission, download it's associated file and write a line of metadata
     results = Query(query=query)
