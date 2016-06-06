@@ -122,7 +122,10 @@ def download(synapse,args):
         raise ValueError("Must pass in one of these options for downloading training/debugging data: %s" % ', '.join(DREAM_TRAINING + DREAM_DEBUG))
 
 def run_test(syn,args):
-    
+    try:
+        subprocess.check_call(["gsutil", "ls" ,DREAM_RNA_BUCKET])
+    except Exception as e:
+        raise ValueError("You are not logged in to gcloud.  Please login by doing 'gcloud auth login' and follow the steps to have access to the google bucket")
     for ref in REFERENCE_DATA.values():
         if not os.path.exists(os.path.join(args.dir, ref)):
             cmd = ["gsutil", "cp", "%s/%s.gz" % (DREAM_RNA_BUCKET, ref), args.dir]
