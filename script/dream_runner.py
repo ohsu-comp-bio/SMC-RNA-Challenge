@@ -51,12 +51,12 @@ def find_synapse_data(cwl):
     input = filter(lambda input: input.get('class', None) == "Workflow", cwl['$graph'])[0]
     return input['hints'][0]['entity']
 
-def call_cwl(tool, inputs, nocache=False):
+def call_cwl(tool, inputs, nocache=False, cachedir = "cwl-cache"):
     if nocache:
         arguments = ["cwl-runner",tool]
     else:
         arguments = ["cwl-runner",
-                     "--cachedir", "cwl-cache",
+                     "--cachedir", cachedir,
                      tool]
     arguments.extend(inputs)
     try:
@@ -71,22 +71,22 @@ def call_cwl(tool, inputs, nocache=False):
         print("Unable to call cwltool")
     #return(temp['output']['path'])
 
-def call_workflow(cwl, fastq1, fastq2, index_path, nocache=False):
+def call_workflow(cwl, fastq1, fastq2, index_path, nocache=False, cachedir="cwl-cache"):
     inputs = ["--index", index_path,
               "--TUMOR_FASTQ_1", fastq1,
               "--TUMOR_FASTQ_2", fastq2]
 
-    output = call_cwl(cwl, inputs, nocache)
+    output = call_cwl(cwl, inputs, nocache, cachedir)
     return(output)
 
-def call_evaluation(cwl, workflow_output, truth, annotations, nocache=False):
+def call_evaluation(cwl, workflow_output, truth, annotations, nocache=False, cachedir="cwl-cache"):
     # local = "eval-workflow.cwl"
     # shutil.copyfile(cwl, local)
     inputs = ["--input", workflow_output,
               "--truth", truth,
               "--gtf", annotations]
 
-    call_cwl(cwl, inputs, nocache)
+    call_cwl(cwl, inputs, nocache, cachedir)
     # os.remove(local)
 
 def run_dream(synapse, args):
@@ -170,7 +170,7 @@ def run_test(syn,args):
     tmp = tempfile.NamedTemporaryFile(dir=args.dir, prefix="dream_runner_input_", suffix=".json", delete=False)
     tmp.write(json.dumps(in_req))
     tmp.close()
-    workflow_out = call_cwl(args.workflow, [tmp.name], args.no_cache)
+    workflow_out = call_cwl(args.workflow, [tmp.name], args.no_cache, cachedir=args.dir)
     if args.challenge == "fusion":
         cwl = os.path.join(os.path.dirname(__file__),"..","FusionDetection","cwl","FusionEvalWorkflow.cwl")
         truth = os.path.abspath(os.path.join(args.dir, args.input + "_filtered.bedpe"))
@@ -182,7 +182,7 @@ def run_test(syn,args):
         annotations = os.path.abspath(os.path.join(args.dir, "Homo_sapiens.GRCh37.75.gtf"))
     else:
         raise ValueError("Please pick either 'fusion' or 'isoform' for challenges")
-    call_evaluation(cwl, workflow_out, truth, annotations,args.no_cache)
+    call_evaluation(cwl, workflow_out, truth, annotations, args.no_cache, cachedir=args.dir)
             
 def perform_main(args):
     synapse = synapse_login(args)
