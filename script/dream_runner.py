@@ -170,7 +170,7 @@ def run_test(syn,args):
     tmp = tempfile.NamedTemporaryFile(dir=args.dir, prefix="dream_runner_input_", suffix=".json", delete=False)
     tmp.write(json.dumps(in_req))
     tmp.close()
-    workflow_out = call_cwl(args.workflow, [tmp.name], args.no_cache, cachedir=args.dir)
+    workflow_out = call_cwl(args.workflow, [tmp.name], args.no_cache, cachedir=args.cachedir)
     if args.challenge == "fusion":
         cwl = os.path.join(os.path.dirname(__file__),"..","FusionDetection","cwl","FusionEvalWorkflow.cwl")
         truth = os.path.abspath(os.path.join(args.dir, args.input + "_filtered.bedpe"))
@@ -182,7 +182,7 @@ def run_test(syn,args):
         annotations = os.path.abspath(os.path.join(args.dir, "Homo_sapiens.GRCh37.75.gtf"))
     else:
         raise ValueError("Please pick either 'fusion' or 'isoform' for challenges")
-    call_evaluation(cwl, workflow_out, truth, annotations, args.no_cache, cachedir=args.dir)
+    call_evaluation(cwl, workflow_out, truth, annotations, args.no_cache, cachedir=args.cachedir)
             
 def perform_main(args):
     synapse = synapse_login(args)
@@ -227,6 +227,8 @@ if __name__ == '__main__':
         help='Choose the challenge question: fusion or isoform')
     parser_test.add_argument("--no-cache", action='store_true',
         help='Do not cache workflow steps')
+    parser_test.add_argument("--cachedir", type=str, default="cwl-cache",
+        help='Directory to cache cwl run')
     parser_test.set_defaults(func=run_test)
     args = parser.parse_args()
     perform_main(args)
