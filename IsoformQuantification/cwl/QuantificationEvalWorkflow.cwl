@@ -32,6 +32,6 @@ steps:
     inputs:
     - {id: truth, source: "#truth"}
     - {id: input, source: "#input"}
-    - {id: gft, source: "#gtf"}
+    - {id: gtf, source: "#gtf"}
     outputs:
     - {id: output}
