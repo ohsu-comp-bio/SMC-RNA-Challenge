@@ -250,7 +250,7 @@ if __name__ == "__main__":
 
     syn = synapseclient.Synapse()
     if args.synapse_user is not None and args.password is not None:
-        print("You only need to provide credentials once then it will remember your login information")
+        print("You only need to provide your synapse credentials once then it will remember your login information")
         syn.login(email=args.synapse_user, password=args.password,rememberMe=True)
     else:
         syn.login()

@@ -179,7 +179,7 @@ def run_test(syn,args):
     elif args.challenge == "isoform":
         cwl = os.path.join(os.path.dirname(__file__),"..","IsoformQuantification","cwl","QuantificationEvalWorkflow.cwl")
         truth = os.path.abspath(os.path.join(args.dir, args.input + "_isoforms_truth.txt"))
-        annotations = os.path.abspath(os.path.join(args.dir, args.input + "Homo_sapiens.GRCh37.75.gtf"))
+        annotations = os.path.abspath(os.path.join(args.dir, "Homo_sapiens.GRCh37.75.gtf"))
     else:
         raise ValueError("Please pick either 'fusion' or 'isoform' for challenges")
     call_evaluation(cwl, workflow_out, truth, annotations,args.no_cache)
