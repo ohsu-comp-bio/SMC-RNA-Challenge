@@ -73,11 +73,11 @@ leaderboard_tables = {}
 
 def validate(evaluation,submission,syn):
     try:
-        test = subprocess.check_call(["cwltool", "--print-pre", submission])
+        test = subprocess.check_call(["cwltool", "--print-pre", submission.filePath])
     except Exception as e:
         raise ValueError("Your CWL file is not formatted correctly",e)
 
-    with open(submission,"r") as cwlfile:
+    with open(submission.filePath,"r") as cwlfile:
         try:
             docs = yaml.load(cwlfile)
         except Exception as e:
@@ -85,7 +85,7 @@ def validate(evaluation,submission,syn):
 
     assert docs['cwlVersion'] == 'draft-3', "cwlVersion must be draft-3"
     if docs.get('$graph',None) is None:
-        raise ValueError("Please run 'python smc_rna_submit.py merge --CWLfile %s'" % submission)
+        raise ValueError("Please run 'python smc_rna_submit.py merge --CWLfile %s'" % submission.filePath)
     else:
         requiredInputs = []
         cwltools = []
@@ -190,7 +190,7 @@ def validate_submission(evaluation, submission):
     config = config_evaluations_map[int(evaluation.id)]
     validation_func = config['validation_function']
     syn = synapseclient.login()
-    results = validation_func(evaluation,submission.filePath,syn)
+    results = validation_func(evaluation,submission,syn)
     return results
 
 
