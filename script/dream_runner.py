@@ -23,12 +23,10 @@ FILE_SUFFIX = ["_filtered.bedpe", "_isoforms_truth.txt", "_mergeSort_1.fq.gz", "
 
 def synapse_login(args):
     synapse = synapseclient.Synapse()
-    if args.synapse_user is not None and args.synapse_password is not None:
-        print('You only need to provide credentials once then it will remember your login information')
+    try:
         synapse.login(email=args.synapse_user, password=args.synapse_password,rememberMe=True)
-    else:
-        synapse.login()
-
+    except Exception as e:
+        raise ValueError("You must provide your synapse credentials the first time you use this tool")
     return synapse
 
 def validate_cwl(cwlpath):
