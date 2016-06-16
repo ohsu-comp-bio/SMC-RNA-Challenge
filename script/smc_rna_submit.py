@@ -14,6 +14,8 @@ import subprocess
 import time
 import yaml
 import shutil
+import getpass
+from sys import argv
 from xml.dom.minidom import parse as parseXML
 
 try:
@@ -54,6 +56,16 @@ CHALLENGE_ADMIN_TEAM_ID = 3322844
 EVALUATION_QUEUE_ID = {"fusion":5877348,"isoform":5952651}
 
 PROVIDED = ["TUMOR_FASTQ_1","TUMOR_FASTQ_2","REFERENCE_GENOME","REFERENCE_GTF"]
+
+def synapse_login():
+    try:
+        syn = synapseclient.login()
+    except Exception as e:
+        print("Please provide your synapse username/email and password (You will only be prompted once)")
+        Username = raw_input("Username: ")
+        Password = getpass.getpass()
+        syn = synapseclient.login(email=Username, password=Password,rememberMe=True)
+    return syn
 
 def validate_workflow(syn,args):
     print("\n\n###VALIDATING MERGED WORKFLOW###\n\n")
@@ -216,9 +228,6 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Submit Files to the DREAM SMC-RNA challenge. Please see https://www.synapse.org/#!Synapse:syn2813589/wiki/70850 for usage instructions.')
 
-    parser.add_argument("--synapse_user", help="Synapse UserName", default=None)
-    parser.add_argument("--password", help="Synapse password", default=None)
-
     subparsers = parser.add_subparsers(title='commands',
             description='The following commands are available:')
 
@@ -257,6 +266,7 @@ if __name__ == "__main__":
 
 
 def perform_main(syn, args):
+    syn = synapse_login()
     if 'func' in args:
         try:
             args.func(syn,args)

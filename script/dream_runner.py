@@ -9,6 +9,8 @@ import traceback
 import tempfile
 import synapseclient
 import json
+import getpass
+from sys import argv
 
 DREAM_RNA_BUCKET = "gs://dream-smc-rna"
 DREAM_TRAINING = ['sim1','sim2','sim3','sim4','sim5','sim7','sim8','sim11','sim13','sim14','sim15','sim16','sim17','sim19','sim21']
@@ -21,13 +23,15 @@ REFERENCE_DATA = {
 
 FILE_SUFFIX = ["_filtered.bedpe", "_isoforms_truth.txt", "_mergeSort_1.fq.gz", "_mergeSort_2.fq.gz"]
 
-def synapse_login(args):
-    synapse = synapseclient.Synapse()
+def synapse_login():
     try:
-        synapse.login(email=args.synapse_user, password=args.synapse_password,rememberMe=True)
+        syn = synapseclient.login()
     except Exception as e:
-        raise ValueError("You must provide your synapse credentials the first time you use this tool")
-    return synapse
+        print("Please provide your synapse username/email and password (You will only be prompted once)")
+        Username = raw_input("Username: ")
+        Password = getpass.getpass()
+        syn = synapseclient.login(email=Username, password=Password,rememberMe=True)
+    return syn
 
 def validate_cwl(cwlpath):
     try:
@@ -183,7 +187,7 @@ def run_test(syn,args):
     call_evaluation(cwl, workflow_out, truth, annotations, args.no_cache, cachedir=args.cachedir)
             
 def perform_main(args):
-    synapse = synapse_login(args)
+    synapse = synapse_login()
     if 'func' in args:
         try:
             args.func(synapse,args)
@@ -193,8 +197,6 @@ def perform_main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='DREAM runner - run your workflow from beginning to end.')
-    parser.add_argument('--synapse-user', help='synapse Username', default=None)
-    parser.add_argument('--synapse-password', help='synapse password', default=None)
     
     subparsers = parser.add_subparsers(title='commands',description='The following commands are available:')
     
