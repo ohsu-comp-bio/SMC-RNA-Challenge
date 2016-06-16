@@ -223,6 +223,13 @@ def merge(syn, args):
     print("Merged workflow: %s" % newFileName)
     return(newFileName)
 
+def perform_main(syn, args):
+    syn = synapse_login()
+    if 'func' in args:
+        try:
+            args.func(syn,args)
+        except Exception as ex:
+            print(ex)
 
 if __name__ == "__main__":
 
@@ -256,15 +263,4 @@ if __name__ == "__main__":
     parser_submit.set_defaults(func=submit_workflow)
 
     args = parser.parse_args()
-
-
-def perform_main(syn, args):
-    syn = synapse_login()
-    if 'func' in args:
-        try:
-            args.func(syn,args)
-        except Exception as ex:
-            print(ex)
-
-perform_main(args)
-
+    perform_main(args)
