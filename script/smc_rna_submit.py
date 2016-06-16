@@ -257,13 +257,6 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    syn = synapseclient.Synapse()
-    if args.synapse_user is not None and args.password is not None:
-        print("You only need to provide your synapse credentials once then it will remember your login information")
-        syn.login(email=args.synapse_user, password=args.password,rememberMe=True)
-    else:
-        syn.login()
-
 
 def perform_main(syn, args):
     syn = synapse_login()
@@ -273,5 +266,5 @@ def perform_main(syn, args):
         except Exception as ex:
             print(ex)
 
-perform_main(syn, args)
+perform_main(args)
 
