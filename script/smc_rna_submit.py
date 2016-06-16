@@ -223,7 +223,7 @@ def merge(syn, args):
     print("Merged workflow: %s" % newFileName)
     return(newFileName)
 
-def perform_main(syn, args):
+def perform_main(args):
     syn = synapse_login()
     if 'func' in args:
         try:
