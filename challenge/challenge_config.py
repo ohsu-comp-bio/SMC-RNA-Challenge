@@ -43,7 +43,18 @@ evaluation_queues = [
  u'ownerId': u'3324230',
  'status': u'OPEN',
  'submissionInstructionsMessage': u'Please submit a merged CWL File',
- 'submissionReceiptMessage': u'Thanks for submitting to SMC-RNA Challenge'}] 
+ 'submissionReceiptMessage': u'Thanks for submitting to SMC-RNA Challenge'},
+ {u'contentSource': u'syn2813589',
+ u'createdOn': u'2016-04-20T02:03:28.436Z',
+ u'description': u'Detect and quantify isoforms present in simulated data, in Illumina short-read datasets containing spiked-in transcripts, and in long-read datasets.',
+ u'etag': u'7fc1394e-876f-49e8-87e2-a6a398c01965',
+ u'id': u'5952651',
+ u'name': u'SMC-RNA-Challenge evaluation queue- Challenge 1-Isoforms',
+ u'ownerId': u'3324230',
+ u'quota': {u'submissionLimit': 3},
+ u'status': u'OPEN',
+ u'submissionInstructionsMessage': u'Submit a CWL file',
+ u'submissionReceiptMessage': u'Thanks for submitting to SMC-RNA-Challenge- Challenge 1-Isoforms'}] 
 
 evaluation_queue_by_id = {q['id']:q for q in evaluation_queues}
 
