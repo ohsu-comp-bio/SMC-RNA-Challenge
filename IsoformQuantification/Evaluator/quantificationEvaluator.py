@@ -80,7 +80,10 @@ def getBothValues():
             name=tmp[0]
             value=float(tmp[1][0:len(tmp[1])-1])
             truth_values.append(value)
-            input_values.append(input_values_dic[name])
+            if input_values_dict.get(name) is not None:
+                input_values.append(input_values_dic[name])
+            else:
+                input_values.append(0)
 
 def calculateCor():
     cor,p_value=stats.spearmanr(truth_values,input_values)

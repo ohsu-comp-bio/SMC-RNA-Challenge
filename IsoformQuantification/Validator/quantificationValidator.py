@@ -94,9 +94,9 @@ def valideRecord():
                 sys.exit(1)
             name=tmp[0]
             value=tmp[1]
-            if transcripts_in_model[name]!='transcript':
-                print "Transcript name: >>>> ",name," <<<< not from gene model."
-                sys.exit(1)
+            #if transcripts_in_model[name]!='transcript':
+            #    print "Transcript name: >>>> ",name," <<<< not from gene model."
+            #    sys.exit(1)
             if transcripts_used[name]>0:
                 print "Repeat transcript: >>>>",name," <<<<."
                 sys.exit(1)
