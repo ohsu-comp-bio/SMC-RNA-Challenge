@@ -122,6 +122,19 @@ def is_contain_dot(strand1,strand2):
     else:
         return False
 
+def check_float(message):
+    try:
+        userInput = float(message)
+    except ValueError:
+        print "\""+message+"\"" " is not a number or \".\"."
+        sys.exit(1)
+
+def check_quantificaton_ok(num):
+    if num==".":
+        return 
+    else:
+        check_float(num)
+
 out_data = []
 
 def validate_file(fileName):
@@ -134,8 +147,8 @@ def validate_file(fileName):
             break
         else:
             tmp=line.split("\t")
-            if(len(tmp)<10):
-                print "Number of columns of bedpe for fusion should >=10."
+            if(len(tmp)<11):
+                print "Number of columns of bedpe for fusion should >=11."
                 sys.exit(1)
             tmp[len(tmp)-1] = tmp[len(tmp)-1][0:len(tmp[len(tmp)-1])-1]
             chr1=get_target(tmp[0])
@@ -148,6 +161,7 @@ def validate_file(fileName):
             if iscd==True:
                 print "Dot not allowed for strand."
                 sys.exit(1)
+            check_quantificaton_ok(tmp[10])
             out_data.append(tmp) 
     f.close()
 
@@ -166,8 +180,10 @@ def remove_duplicate():
             pos2=out_data[i][5]
         out_data[i].append(get_integer(pos1))
         out_data[i].append(get_integer(pos2))
-        
-    out_data = sorted(out_data, key = lambda x: (x[0], x[3], x[8], x[9], x[10], x[11]))
+    if len(out_data)<=0:
+        return
+    lenRow=len(out_data[0])     
+    out_data = sorted(out_data, key = lambda x: (x[0], x[3], x[8], x[9], x[lenRow-2], x[lenRow-1]))
     out_data_2 = []
     for i in range(len(out_data)):
         if i==0:
