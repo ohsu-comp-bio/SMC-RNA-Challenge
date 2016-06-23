@@ -148,7 +148,7 @@ def validate_file(fileName):
         else:
             tmp=line.split("\t")
             if(len(tmp)<10):
-                print "Number of columns of bedpe for fusion should be >=10."
+                print "Number of columns of bedpe for fusion should be 10 or 11"
                 sys.exit(1)
             tmp[len(tmp)-1] = tmp[len(tmp)-1][0:len(tmp[len(tmp)-1])-1]
             chr1=get_target(tmp[0])
@@ -161,7 +161,9 @@ def validate_file(fileName):
             if iscd==True:
                 print "Dot not allowed for strand."
                 sys.exit(1)
-            check_quantificaton_ok(tmp[10])
+            #Add check for if quantification column exists
+            if len(temp) == 11:
+                check_quantificaton_ok(tmp[10])
             out_data.append(tmp) 
     f.close()
 
