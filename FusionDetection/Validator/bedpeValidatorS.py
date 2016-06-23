@@ -147,8 +147,8 @@ def validate_file(fileName):
             break
         else:
             tmp=line.split("\t")
-            if(len(tmp)<11):
-                print "Number of columns of bedpe for fusion should >=11."
+            if(len(tmp)<10):
+                print "Number of columns of bedpe for fusion should be >=10."
                 sys.exit(1)
             tmp[len(tmp)-1] = tmp[len(tmp)-1][0:len(tmp[len(tmp)-1])-1]
             chr1=get_target(tmp[0])
