@@ -162,7 +162,7 @@ def validate_file(fileName):
                 print "Dot not allowed for strand."
                 sys.exit(1)
             #Add check for if quantification column exists
-            if len(temp) == 11:
+            if len(tmp) == 11:
                 check_quantificaton_ok(tmp[10])
             out_data.append(tmp) 
     f.close()
