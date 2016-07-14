@@ -5,13 +5,13 @@ int Bedpe::loadFromFile(char * filename)
 {
   bedpevec.clear();
   string line;
-  bedpe_t bt;
   ifstream myfile (filename);
   if (myfile.is_open())
   {
     while ( getline (myfile,line) )
     {
         std::vector<std::string> tmp = my_split(line, '\t');
+        bedpe_t bt;
         bt.chr1=tmp[0];
         bt.start1=atol(tmp[1].c_str());
         bt.end1=atol(tmp[2].c_str());
@@ -24,7 +24,9 @@ int Bedpe::loadFromFile(char * filename)
         bt.strand2=tmp[9][0];
         if(tmp.size()>10)
         {
-            std::copy ( tmp.begin()+10, tmp.begin()+(tmp.size()-10), bt.others.begin());
+            vector<string>::iterator it;
+            for(it=tmp.begin()+10;it!=tmp.end();it++)
+                bt.others.push_back(*it);
         }
         bedpevec.push_back(bt);
     }
@@ -66,13 +68,25 @@ int Bedpe::printBedpe(char * file)
     
     for(int i=0;i<bedpevec.size();i++)
     {
-        bedpe_t bt=bedpevec[i];    
+        bedpe_t bt=bedpevec[i];
         ofs<<bt.chr1<<"\t";
-        ofs<<bt.start1<<"\t";
-        ofs<<bt.end1<<"\t";
+        if(bt.start1==-1)
+            ofs<<"-1"<<"\t";
+        else
+            ofs<<bt.start1<<"\t";
+        if(bt.end1==-1)
+            ofs<<"-1"<<"\t";
+        else
+            ofs<<bt.end1<<"\t";
         ofs<<bt.chr2<<"\t";
-        ofs<<bt.start2<<"\t";
-        ofs<<bt.end2<<"\t";
+        if(bt.start2==-1)
+            ofs<<"-1"<<"\t";
+        else
+            ofs<<bt.start2<<"\t";
+        if(bt.end2==-1)
+            ofs<<"-1"<<"\t";
+        else
+            ofs<<bt.end2<<"\t";
         ofs<<bt.name<<"\t";
         ofs<<bt.score<<"\t";
         ofs<<bt.strand1<<"\t";
@@ -81,6 +95,7 @@ int Bedpe::printBedpe(char * file)
            ofs<<"\n";
         else 
         {
+           ofs<<"\t";
            for(int j=0;j<bt.others.size()-1;j++)        
            {
                ofs<<bt.others[j]<<"\t";
@@ -288,7 +303,6 @@ int Bedpe::uniq()
     bedpevec=bedpevec2;
     return 0;
 }
-
 
 
 
