@@ -94,8 +94,8 @@ def validate(evaluation,submission,syn):
             docs = yaml.load(cwlfile)
         except Exception as e:
             raise Exception("Must be a CWL file (Yaml format)")
-
-    assert docs['cwlVersion'] == 'draft-3', "cwlVersion must be draft-3"
+    version = docs['cwlVersion']
+    assert version in  ['v1.0','draft-3'], "cwlVersion must be draft-3 or v1.0"
     if docs.get('$graph',None) is None:
         raise ValueError("Please run 'python smc_rna_submit.py merge --CWLfile %s'" % submission.filePath)
     else:
@@ -149,10 +149,21 @@ def validate(evaluation,submission,syn):
             for i in workflowinputs:
                 assert os.path.basename(i) in PROVIDED or os.path.basename(i) in custom_inputs, "Your specified input ids must be one of: %s" %  ", ".join(custom_inputs.keys()+PROVIDED)
         for i in workflow['steps']:
-            for y in i['outputs']:
-                workflowoutputs.append("%s" % y['id'])
+            #Check for v1.0 and draft-3
+            if version == "draft-3":
+                inputs = "inputs"
+                outSource = "source"
+                for y in i['outputs']:
+                    workflowoutputs.append(y['id'])
+            else:
+                inputs = "in"
+                outSource = "outputSource"
+                for y in i['out']:
+                    workflowoutputs.append(y)
             workflowinputs = workflowinputs + workflowoutputs
-            for y in i['inputs']:
+        #Must seperate the input and output colleciton steps
+        for i in workflow['steps']:
+            for y in i[inputs]:
                 #Check: Workflow tool steps match the cwltools inputs
                 steps = "%s/#%s/%s" % ("input",i['run'][1:],os.path.basename(y['id']))
                 assert steps in cwltools, 'Your tool inputs do not match your workflow inputs'
@@ -162,8 +173,8 @@ def validate(evaluation,submission,syn):
         for i in workflow['outputs']:
             assert i['id'] == '#main/OUTPUT', "Your workflow output id must be OUTPUT"
             #Check: All outputs have the correct sources mapped
-            if 'source' in i:
-                assert i['source'] in workflowoutputs, 'Your workflow output is not mapped correctly to your tools'
+            if outSource in i:
+                assert i[outSource] in workflowoutputs, 'Your workflow output is not mapped correctly to your tools'
     return (True,"Passed validation!")
 
 
