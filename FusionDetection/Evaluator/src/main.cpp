@@ -77,16 +77,16 @@ int main(int argc, char * argv[])
     int print_num=0;
 
     static struct option long_options[] = {
-        {"truth-file",            required_argument, 0,  0 },
-        {"result-file",           required_argument, 0,  0 },
-        {"gene-annotation-file",  required_argument, 0,  0 },
-        {"output-file",           required_argument, 0,  0 },
-        {"subsetting-rule-file",  required_argument, 0,  0 },
-        {"base-resolution",       required_argument, 0,  0 },
-        {"max-diff",              required_argument, 0,  0 },
-        {"pseudo-counts",         required_argument, 0,  0 },
-        {"use-number",            no_argument,       0,  0 },
-        {"help",                  no_argument,       0,  0 },
+        {"truth-file",            required_argument, 0,  't' },
+        {"result-file",           required_argument, 0,  'r' },
+        {"gene-annotation-file",  required_argument, 0,  'g' },
+        {"output-file",           required_argument, 0,  'o' },
+        {"subsetting-rule-file",  required_argument, 0,  's' },
+        {"base-resolution",       required_argument, 0,  'b' },
+        {"max-diff",              required_argument, 0,  'm' },
+        {"pseudo-counts",         required_argument, 0,  'p' },
+        {"use-number",            no_argument,       0,  'u' },
+        {"help",                  no_argument,       0,  'h' },
         {0, 0, 0, 0}
     };
 
