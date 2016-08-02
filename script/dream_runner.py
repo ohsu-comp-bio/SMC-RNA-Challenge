@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+
 import os
 import yaml
 import shutil
@@ -8,6 +10,7 @@ import subprocess
 import traceback
 import tempfile
 import synapseclient
+import sys
 import json
 import getpass
 from sys import argv
@@ -62,11 +65,11 @@ def call_cwl(tool, inputs, nocache=False, cachedir = "cwl-cache"):
                      tool]
     arguments.extend(inputs)
     try:
-        print "Running: %s" % (" ".join(arguments))
+        print("Running: %s" % (" ".join(arguments)))
         process = subprocess.Popen(arguments, stdout=subprocess.PIPE)
         output, error = process.communicate()
         temp = json.loads(output)
-        print temp
+        print(temp)
         return(temp['OUTPUT']['path'])
     except Exception, e:
         traceback.print_exc()
@@ -110,7 +113,7 @@ def download(synapse,args):
     except Exception as e:
         raise ValueError("You are not logged in to gcloud.  Please login by doing 'gcloud auth login' and follow the steps to have access to the google bucket")
     if args.input in DREAM_TRAINING or args.input in DREAM_DEBUG:
-        print("Caching Inputs files")
+        print("Caching Inputs files", file=sys.stderr)
         for suf in FILE_SUFFIX:
             local_path = os.path.join(args.dir, args.input + suf)
             if not os.path.exists(local_path):
@@ -123,22 +126,7 @@ def download(synapse,args):
     else:
         raise ValueError("Must pass in one of these options for downloading training/debugging data: %s" % ', '.join(DREAM_TRAINING + DREAM_DEBUG))
 
-def run_test(syn,args):
-    try:
-        subprocess.check_call(["gsutil", "ls" ,DREAM_RNA_BUCKET])
-    except Exception as e:
-        raise ValueError("You are not logged in to gcloud.  Please login by doing 'gcloud auth login' and follow the steps to have access to the google bucket")
-    if not os.path.exists(args.dir):
-        print("Making directory %s" % args.dir)
-        os.mkdir(args.dir)
-
-    for ref in REFERENCE_DATA.values():
-        if not os.path.exists(os.path.join(args.dir, ref)):
-            cmd = ["gsutil", "cp", "%s/%s.gz" % (DREAM_RNA_BUCKET, ref), args.dir]
-            subprocess.check_call(cmd)
-            cmd = ["gunzip", os.path.join(args.dir, "%s.gz" % (ref))]
-            subprocess.check_call(cmd)
-        
+def gen_inputs(syn,args):
     with open(args.workflow) as handle:
         doc = yaml.load(handle.read())
     custom_inputs = {}
@@ -167,7 +155,26 @@ def run_test(syn,args):
         }
     for k, v in custom_inputs.items():
         in_req[k] = v
-    print json.dumps(in_req, indent=4)
+    return in_req
+
+def run_test(syn,args):
+    try:
+        subprocess.check_call(["gsutil", "ls" ,DREAM_RNA_BUCKET])
+    except Exception as e:
+        raise ValueError("You are not logged in to gcloud.  Please login by doing 'gcloud auth login' and follow the steps to have access to the google bucket")
+    if not os.path.exists(args.dir):
+        print("Making directory %s" % args.dir, file=sys.stderr)
+        os.mkdir(args.dir)
+
+    for ref in REFERENCE_DATA.values():
+        if not os.path.exists(os.path.join(args.dir, ref)):
+            cmd = ["gsutil", "cp", "%s/%s.gz" % (DREAM_RNA_BUCKET, ref), args.dir]
+            subprocess.check_call(cmd)
+            cmd = ["gunzip", os.path.join(args.dir, "%s.gz" % (ref))]
+            subprocess.check_call(cmd)
+        
+    in_req = gen_inputs(syn,args)
+    print(json.dumps(in_req, indent=4))
         
     tmp = tempfile.NamedTemporaryFile(dir=args.dir, prefix="dream_runner_input_", suffix=".json", delete=False)
     tmp.write(json.dumps(in_req))
@@ -185,14 +192,18 @@ def run_test(syn,args):
     else:
         raise ValueError("Please pick either 'fusion' or 'isoform' for challenges")
     call_evaluation(cwl, workflow_out, truth, annotations, args.no_cache, cachedir=args.cachedir)
-            
+
+def run_inputs(syn,args):
+    in_req = gen_inputs(syn,args)
+    print(json.dumps(in_req, indent=4))
+    
 def perform_main(args):
     synapse = synapse_login()
     if 'func' in args:
         try:
             args.func(synapse,args)
         except Exception as ex:
-            print traceback.print_exc()
+            print(traceback.print_exc())
             print(ex)
 
 if __name__ == '__main__':
@@ -207,6 +218,7 @@ if __name__ == '__main__':
     parser_run.add_argument('--fastq2', default='sim1a_30m_merged_2.fq.gz')
     parser_run.add_argument('--truth', default='truth.bedpe')
     parser_run.add_argument('--annotations', default='ensembl.hg19.txt')
+    parser_run.add_argument('--bucket', default="gs://dream-smc-rna")
     parser_run.set_defaults(func=run_dream)
     
     parser_download = subparsers.add_parser('download',help='Downloads training and dry-run data')
@@ -214,6 +226,7 @@ if __name__ == '__main__':
         help='download training or dry data: %s' % ( ", ".join(DREAM_TRAINING+DREAM_DEBUG)))
     parser_download.add_argument('--dir', default="./", type=str, 
         help='Directory to download files to')
+    parser_download.add_argument('--bucket', default="gs://dream-smc-rna")
     parser_download.set_defaults(func=download)
     
     parser_test = subparsers.add_parser('test',help='Downloads training and dry-run data')
@@ -229,6 +242,28 @@ if __name__ == '__main__':
         help='Do not cache workflow steps')
     parser_test.add_argument("--cachedir", type=str, default="cwl-cache",
         help='Directory to cache cwl run')
+    parser_test.add_argument('--bucket', default="gs://dream-smc-rna")
     parser_test.set_defaults(func=run_test)
+
+    parser_inputs = subparsers.add_parser('inputs',help='Create Input JSON')
+    parser_inputs.add_argument("--dir", type=str, default="./",
+        help='Directory to download data to')
+    parser_inputs.add_argument("input", type = str,
+        help='Training/debugging dataset to use: %s' % ( ", ".join(DREAM_TRAINING+DREAM_DEBUG)))
+    parser_inputs.add_argument("workflow", type = str,
+        help='Non merged workflow file')
+    parser_inputs.add_argument("challenge", type = str,
+        help='Choose the challenge question: fusion or isoform')
+    parser_inputs.add_argument("--no-cache", action='store_true',
+        help='Do not cache workflow steps')
+    parser_inputs.add_argument("--cachedir", type=str, default="cwl-cache",
+        help='Directory to cache cwl run')
+    parser_inputs.add_argument('--bucket', default="gs://dream-smc-rna")
+    parser_inputs.set_defaults(func=run_inputs)
+
+
     args = parser.parse_args()
+    
+    DREAM_RNA_BUCKET = args.bucket
+    
     perform_main(args)
