@@ -186,7 +186,7 @@ def run_test(syn,args):
         annots = syn.get("syn5908245")
         annotations = annots.path
     elif args.challenge == "fusionQuant":
-        cwl = os.path.join(os.path.dirname(__file__),"..","FusionQuantification","cwl","FusionQuantEvalWorkflow.cwl")
+        cwl = os.path.join(os.path.dirname(__file__),"..","FusionQuantification","cwl","FusionQuantWorkflow.cwl")
         truth = os.path.abspath(os.path.join(args.dir, args.input + "_filtered.bedpe"))
         annots = syn.get("syn5908245")
         annotations = annots.path        
@@ -195,7 +195,7 @@ def run_test(syn,args):
         truth = os.path.abspath(os.path.join(args.dir, args.input + "_isoforms_truth.txt"))
         annotations = os.path.abspath(os.path.join(args.dir, "Homo_sapiens.GRCh37.75.gtf"))
     else:
-        raise ValueError("Please pick either 'fusion' or 'isoform' for challenges")
+        raise ValueError("Please pick either 'fusionDet', 'fusionQuant' or 'isoform' for challenges")
     call_evaluation(cwl, workflow_out, truth, annotations, args.no_cache, cachedir=args.cachedir)
 
 def run_inputs(syn,args):
