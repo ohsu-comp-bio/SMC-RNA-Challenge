@@ -88,8 +88,9 @@ def call_evaluation(cwl, workflow_output, truth, annotations, nocache=False, cac
     # local = "eval-workflow.cwl"
     # shutil.copyfile(cwl, local)
     inputs = ["--input", workflow_output,
-              "--truth", truth,
-              "--gtf", annotations]
+              "--truth", truth]
+    if annotations is not None:
+        inputs.extend(["--gtf", annotations])
 
     call_cwl(cwl, inputs, nocache, cachedir)
     # os.remove(local)
@@ -189,7 +190,7 @@ def run_test(syn,args):
         cwl = os.path.join(os.path.dirname(__file__),"..","FusionQuantification","cwl","FusionQuantWorkflow.cwl")
         truth = os.path.abspath(os.path.join(args.dir, args.input + "_filtered.bedpe"))
         annots = syn.get("syn5908245")
-        annotations = annots.path        
+        annotations = None       
     elif args.challenge == "isoform":
         cwl = os.path.join(os.path.dirname(__file__),"..","IsoformQuantification","cwl","QuantificationEvalWorkflow.cwl")
         truth = os.path.abspath(os.path.join(args.dir, args.input + "_isoforms_truth.txt"))
