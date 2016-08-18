@@ -7,7 +7,7 @@ RUN apt-get install -y git build-essential cmake gcc python python-pip python-de
 WORKDIR /opt
 
 #Install evaluators, and validators
-RUN git clone https://github.com/Sage-Bionetworks/SMC-RNA-Challenge.git && \
+RUN git clone -b cwlv1 https://github.com/Sage-Bionetworks/SMC-RNA-Challenge.git && \
 	cd SMC-RNA-Challenge && \
 	mkdir build && \
 	cd build && \
