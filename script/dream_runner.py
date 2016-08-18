@@ -186,7 +186,7 @@ def run_test(syn,args):
         annots = syn.get("syn5908245")
         annotations = annots.path
     elif args.challenge == "fusionQuant":
-        cwl = os.path.join(os.path.dirname(__file__),"..","FusionDetection","cwl","FusionEvalWorkflow.cwl")
+        cwl = os.path.join(os.path.dirname(__file__),"..","FusionQuantification","cwl","FusionQuantEvalWorkflow.cwl")
         truth = os.path.abspath(os.path.join(args.dir, args.input + "_filtered.bedpe"))
         annots = syn.get("syn5908245")
         annotations = annots.path        
@@ -258,7 +258,7 @@ if __name__ == '__main__':
     parser_inputs.add_argument("workflow", type = str,
         help='Non merged workflow file')
     parser_inputs.add_argument("challenge", type = str,
-        help='Choose the challenge question: fusion or isoform')
+        help='Choose the challenge question: fusionDet, fusionQuant or isoform')
     parser_inputs.add_argument("--no-cache", action='store_true',
         help='Do not cache workflow steps')
     parser_inputs.add_argument("--cachedir", type=str, default="cwl-cache",
