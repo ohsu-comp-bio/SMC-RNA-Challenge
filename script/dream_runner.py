@@ -180,11 +180,16 @@ def run_test(syn,args):
     tmp.write(json.dumps(in_req))
     tmp.close()
     workflow_out = call_cwl(args.workflow, [tmp.name], args.no_cache, cachedir=args.cachedir)
-    if args.challenge == "fusion":
+    if args.challenge == "fusionDet":
         cwl = os.path.join(os.path.dirname(__file__),"..","FusionDetection","cwl","FusionEvalWorkflow.cwl")
         truth = os.path.abspath(os.path.join(args.dir, args.input + "_filtered.bedpe"))
         annots = syn.get("syn5908245")
         annotations = annots.path
+    elif args.challenge == "fusionQuant":
+        cwl = os.path.join(os.path.dirname(__file__),"..","FusionDetection","cwl","FusionEvalWorkflow.cwl")
+        truth = os.path.abspath(os.path.join(args.dir, args.input + "_filtered.bedpe"))
+        annots = syn.get("syn5908245")
+        annotations = annots.path        
     elif args.challenge == "isoform":
         cwl = os.path.join(os.path.dirname(__file__),"..","IsoformQuantification","cwl","QuantificationEvalWorkflow.cwl")
         truth = os.path.abspath(os.path.join(args.dir, args.input + "_isoforms_truth.txt"))
