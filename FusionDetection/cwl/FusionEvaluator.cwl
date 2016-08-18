@@ -1,41 +1,45 @@
 #!/usr/bin/env cwl-runner
+#
+# Authors: Thomas Yu, Ryan Spangler, Kyle Ellrott
 
-cwlVersion: "draft-3"
-
+cwlVersion: v1.0
 class: CommandLineTool
+baseCommand: [evaluation.py,evaluateFusionDet]
 
-description: "Fusion Detection validation and evaluation"
+doc: "Fusion Detection validation and evaluation"
+
+hints:
+  DockerRequirement:
+    dockerPull: dreamchallenge/smcrna-functions
 
 requirements:
   - class: InlineJavascriptRequirement
-  - class: DockerRequirement
-    dockerPull: dreamchallenge/smcrna-functions
 
 inputs:
 
-  - id: truth
+  truth:
     type: File
     inputBinding:
       prefix: --truth
       position: 1
   
-  - id: input
+  input:
     type: File
     inputBinding:
       prefix: --input
       position: 1
 
-  - id: gtf
+  gtf:
     type: File
     inputBinding:
       prefix: --gtf
       position: 1
 
 outputs:
-  - id: output
+
+  output:
     type: File
     outputBinding:
       glob: result.out
 
-baseCommand: [evaluation.py,evaluateFusionDet]
 

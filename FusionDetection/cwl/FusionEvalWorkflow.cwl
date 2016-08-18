@@ -3,35 +3,33 @@
 # Authors: Thomas Yu, Ryan Spangler, Kyle Ellrott
 
 class: Workflow
+cwlVersion: v1.0
 
-cwlVersion: "draft-3"
-
-description: "Fusion Detection Validator/Evaluator workflow"
+doc: "Fusion Detection Validator/Evaluator workflow"
 
 inputs: 
 
-  - id: truth
+  truth:
     type: File
   
-  - id: input
+  input:
     type: File
 
-  - id: gtf
+  gtf:
     type: File
 
 outputs:
 
   - id: OUTPUT
-    type: ["null",File]
-    source: "#evaluator/output"
+    type: File?
+    outputSource: evaluator/output
 
 steps:
 
-  - id: evaluator
+  evaluator:
     run: FusionEvaluator.cwl
-    inputs:
-    - {id: truth, source: "#truth"}
-    - {id: input, source: "#input"}
-    - {id: gtf, source: "#gtf"}
-    outputs:
-    - {id: output}
+    in:
+      truth: truth
+      input: input
+      gtf: gtf
+    out: [output]

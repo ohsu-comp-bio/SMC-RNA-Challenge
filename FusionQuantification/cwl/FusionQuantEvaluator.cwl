@@ -1,4 +1,6 @@
 #!/usr/bin/env cwl-runner
+#
+# Authors: Thomas Yu, Ryan Spangler, Kyle Ellrott
 
 cwlVersion: v1.0
 class: CommandLineTool
@@ -15,20 +17,21 @@ requirements:
 
 inputs:
 
-  - id: truth
+  truth:
     type: File
     inputBinding:
       prefix: --truth
       position: 1
   
-  - id: input
+  input:
     type: File
     inputBinding:
       prefix: --input
       position: 1
 
 outputs:
-  - id: output
+
+  output:
     type: File
     outputBinding:
       glob: result.out
