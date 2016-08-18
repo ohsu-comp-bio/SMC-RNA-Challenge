@@ -22,6 +22,27 @@ def evaluateFusionDet(args):
 			results.write(output)
 			results.close()
 
+def evaluateFusionQuant(args):
+	validator_path = os.path.join(os.path.dirname(__file__), "..", "FusionDetection", "Validator", "bedpeValidatorS.py")
+	chrom_path = os.path.join(os.path.dirname(__file__), "..", "FusionDetection", "Validator", "GRCh37.chromosome.strict.txt")
+	evaluator_path = os.path.join(os.path.dirname(__file__), "..", "FusionQuantification", "Evaluator", "fusionQuantificationEvaluator.py")
+	print(validator_path)
+	print(chrom_path)
+	print(evaluator_path)
+	try:
+		val = subprocess.Popen([validator_path, "-c", chrom_path, "-i",args.input],stdout=subprocess.PIPE)
+		output = val.stdout.read()
+		print(output)
+	except Exception as e:
+		output = str(e)
+		print(output)
+	if output == "Validated\n":
+		evaluate = subprocess.check_call([evaluator_path, "-t", args.truth,"-i",args.input])
+	else:
+		with open("result.out",'w') as results:
+			results.write(output)
+			results.close()
+
 def evaluateIsoformQuant(args):
 	validator_path = os.path.join(os.path.dirname(__file__), "..", "IsoformQuantification", "Validator", "quantificationValidator.py")
 	evaluator_path = os.path.join(os.path.dirname(__file__), "..", "IsoformQuantification", "Evaluator", "quantificationEvaluator.py")
@@ -69,6 +90,12 @@ parser_evaluateFusionDet.add_argument('--input',  metavar='results.bedpe', type=
 parser_evaluateFusionDet.add_argument('--truth', help='Truth file', metavar='truth.bedpe',type=str,required=True)
 parser_evaluateFusionDet.set_defaults(func=evaluateFusionDet)
 
+parser_evaluateFusionQuant = subparsers.add_parser('evaluateFusionQuant',
+		help='validates and evaluates Fusion Quantification challenge')
+parser_evaluateFusionQuant.add_argument('--input',  metavar='results.bedpe', type=str, required=True,
+		help='bedpe format file'),
+parser_evaluateFusionQuant.add_argument('--truth', help='Truth file', metavar='truth.bedpe',type=str,required=True)
+parser_evaluateFusionQuant.set_defaults(func=evaluateFusionQuant)
 #Parse args
 args = parser.parse_args()
 perform_main(args)
