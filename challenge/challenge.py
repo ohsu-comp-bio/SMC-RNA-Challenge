@@ -503,7 +503,7 @@ def command_reset(args):
 def command_validate(args):
     if args.all:
         for queue_info in conf.evaluation_queues:
-            validate(queue_info['id'], arg.token, dry_run=args.dry_run)
+            validate(queue_info['id'], args.token, dry_run=args.dry_run)
     elif args.evaluation:
         validate(args.evaluation, args.token, dry_run=args.dry_run)
     else:
