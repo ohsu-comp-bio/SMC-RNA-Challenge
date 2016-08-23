@@ -155,7 +155,7 @@ class Query(object):
         return values
 
 
-def validate(evaluation, dry_run=False):
+def validate(evaluation, token, dry_run=False):
 
     if type(evaluation) != Evaluation:
         evaluation = syn.getEvaluation(evaluation)
@@ -173,7 +173,7 @@ def validate(evaluation, dry_run=False):
 
         print "validating", submission.id, submission.name
         try:
-            is_valid, validation_message = conf.validate_submission(evaluation, submission)
+            is_valid, validation_message = conf.validate_submission(evaluation, submission, token)
         except Exception as ex1:
             is_valid = False
             print "Exception during validation:", type(ex1), ex1, ex1.message
@@ -408,38 +408,47 @@ def archive(evaluation, destination=None, name=None, query=None):
             os.mkdir(submissionId)
             submission_parent = syn.store(Folder(submissionId,parent=destination))
             submission = syn.getSubmission(submissionId, downloadLocation=submissionId)
-            newFilePath = submission.filePath.replace(' ', '_')
-            shutil.move(submission.filePath,newFilePath)
-            #Store CWL file in bucket
-            os.system('gsutil cp -R %s gs://smc-rna-cache/%s' % (submissionId,path))
-            with open(newFilePath,"r") as cwlfile:
-                docs = yaml.load(cwlfile)
-                merged = docs['$graph']
-                docker = []
-                for tools in merged:
-                    if tools['class'] == 'CommandLineTool':
-                        if tools.get('requirements',None) is not None:
-                            for i in tools['requirements']:
-                                if i.get('dockerPull',None) is not None:
-                                    docker.append(i['dockerPull'])
-                    if tools['class'] == 'Workflow':
-                        hints = tools.get("hints",None)
-                        if hints is not None:
-                            for i in tools['hints']:
-                                if os.path.basename(i['class']) == "synData":
-                                    temp = syn.get(i['entity'])
-                                    #Store index files
-                                    os.system('gsutil cp %s gs://smc-rna-cache/%s/%s' % (temp.path,path,submissionId))
-            os.system('rm -rf ~/.synapseCache/*')
-            #Pull, save, and store docker containers
-            docker = set(docker)
-            for i in docker:
-                os.system('sudo docker pull %s' % i)
-                os.system('sudo docker save %s' % i)
-                os.system('sudo docker save -o %s.tar %s' %(os.path.basename(i),i))
-                os.system('sudo chmod a+r %s.tar' % os.path.basename(i))
-                os.system('gsutil cp %s.tar gs://smc-rna-cache/%s/%s' % (os.path.basename(i),path,submissionId))
-                os.remove("%s.tar" % os.path.basename(i))
+            if submission.entity.externalURL is None:
+                newFilePath = submission.filePath.replace(' ', '_')
+                shutil.move(submission.filePath,newFilePath)
+                #Store CWL file in bucket
+                os.system('gsutil cp -R %s gs://smc-rna-cache/%s' % (submissionId,path))
+                with open(newFilePath,"r") as cwlfile:
+                    docs = yaml.load(cwlfile)
+                    merged = docs['$graph']
+                    docker = []
+                    for tools in merged:
+                        if tools['class'] == 'CommandLineTool':
+                            if tools.get('requirements',None) is not None:
+                                for i in tools['requirements']:
+                                    if i.get('dockerPull',None) is not None:
+                                        docker.append(i['dockerPull'])
+                            if tools.get('hints', None) is not None:
+                                for i in tools['hints']:
+                                    if i.get('dockerPull',None) is not None:
+                                        docker.append(i['dockerPull']) 
+                        if tools['class'] == 'Workflow':
+                            hints = tools.get("hints",None)
+                            if hints is not None:
+                                for i in tools['hints']:
+                                    if os.path.basename(i['class']) == "synData":
+                                        temp = syn.get(i['entity'])
+                                        #Store index files
+                                        os.system('gsutil cp %s gs://smc-rna-cache/%s/%s' % (temp.path,path,submissionId))
+                os.system('rm -rf ~/.synapseCache/*')
+                #Pull, save, and store docker containers
+                docker = set(docker)
+                for i in docker:
+                    os.system('sudo docker pull %s' % i)
+                    os.system('sudo docker save %s' % i)
+                    os.system('sudo docker save -o %s.tar %s' %(os.path.basename(i),i))
+                    os.system('sudo chmod a+r %s.tar' % os.path.basename(i))
+                    os.system('gsutil cp %s.tar gs://smc-rna-cache/%s/%s' % (os.path.basename(i),path,submissionId))
+                    os.remove("%s.tar" % os.path.basename(i))
+            #else:
+            #    os.system('rm %s' % os.path.join(submissionId, submission.name))
+            #    test = subprocess.check_call(["python", os.path.join(os.path.dirname(__file__),"../../SMC-RNA-Eval/sbg-download.py"), "--token", token, submission.name, submissionId])
+            #    os.system('gsutil cp -R %s gs://smc-rna-cache' % submissionId)
             os.system('rm -rf %s' % submissionId)
 
 
@@ -496,7 +505,7 @@ def command_validate(args):
         for queue_info in conf.evaluation_queues:
             validate(queue_info['id'], dry_run=args.dry_run)
     elif args.evaluation:
-        validate(args.evaluation, dry_run=args.dry_run)
+        validate(args.evaluation, args.token, dry_run=args.dry_run)
     else:
         sys.stderr.write("\nValidate command requires either an evaluation ID or --all to validate all queues in the challenge")
 
@@ -575,6 +584,7 @@ def main():
     parser_validate = subparsers.add_parser('validate', help="Validate all RECEIVED submissions to an evaluation")
     parser_validate.add_argument("evaluation", metavar="EVALUATION-ID", nargs='?', default=None, )
     parser_validate.add_argument("--all", action="store_true", default=False)
+    parser_validate.add_argument("--token", metavar='API key', type='string', required=True)
     parser_validate.set_defaults(func=command_validate)
 
     parser_score = subparsers.add_parser('score', help="Score all VALIDATED submissions to an evaluation")

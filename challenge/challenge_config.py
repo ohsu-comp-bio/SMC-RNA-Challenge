@@ -8,6 +8,8 @@ import synapseclient
 import subprocess
 import yaml
 import os
+import requests
+
 ## A Synapse project will hold the assetts for your challenge. Put its
 ## synapse ID here, for example
 ## CHALLENGE_SYN_ID = "syn1234567"
@@ -81,100 +83,108 @@ for q in evaluation_queues:
 ## where the table holds a leaderboard for that question
 leaderboard_tables = {}
 
+## Testing link validation: 7155824
+def validate(evaluation,submission,syn,token):
 
-def validate(evaluation,submission,syn):
-    try:
-        #test = subprocess.check_call(["cwltool", "--print-pre", submission.filePath])
-        test = os.system("cwltool --print-pre %s" % submission.filePath)
-    except Exception as e:
-        raise ValueError("Your CWL file is not formatted correctly",e)
-
-    with open(submission.filePath,"r") as cwlfile:
+    if submission.entity.externalURL is None:
         try:
-            docs = yaml.load(cwlfile)
+            #test = subprocess.check_call(["cwltool", "--print-pre", submission.filePath])
+            test = os.system("cwltool --print-pre %s" % submission.filePath)
         except Exception as e:
-            raise Exception("Must be a CWL file (Yaml format)")
-    version = docs['cwlVersion']
-    assert version in  ['v1.0','draft-3'], "cwlVersion must be draft-3 or v1.0"
-    if docs.get('$graph',None) is None:
-        raise ValueError("Please run 'python smc_rna_submit.py merge --CWLfile %s'" % submission.filePath)
+            raise ValueError("Your CWL file is not formatted correctly",e)
+
+        with open(submission.filePath,"r") as cwlfile:
+            try:
+                docs = yaml.load(cwlfile)
+            except Exception as e:
+                raise Exception("Must be a CWL file (Yaml format)")
+        version = docs['cwlVersion']
+        assert version in  ['v1.0','draft-3'], "cwlVersion must be draft-3 or v1.0"
+        if docs.get('$graph',None) is None:
+            raise ValueError("Please run 'python smc_rna_submit.py merge --CWLfile %s'" % submission.filePath)
+        else:
+            requiredInputs = []
+            cwltools = []
+            workflowinputs = []
+            workflowoutputs = []
+            merged = docs['$graph']
+            custom_inputs = dict()
+            for tools in merged:
+                if tools['class'] == 'CommandLineTool':
+                    for i in tools['inputs']:
+                        cwltools.append("%s/%s" % ("input",i['id']))
+                    for i in tools['outputs']:
+                        cwltools.append("%s/%s" % ("output",i['id']))
+                else:
+                    #Check: Workflow class
+                    assert tools['class'] == 'Workflow', 'CWL Classes can only be named "Workflow" or "CommandLineTool'
+                    workflow = tools
+            #Check: Make sure hints for index files are formatted correctly
+            hints = workflow.get("hints",None)
+            if hints is not None:
+                for i in hints:
+                    if os.path.basename(i['class']) == "synData":
+                        assert i.get('input', None) is not None or \
+                               i.get('entity', None) is not None, """synData hint must be in this format:
+                                                                                hints:
+                                                                                  - class: synData
+                                                                                    input: index
+                                                                                    entity: syn12345
+                                                                  """
+                        custom_inputs[i['input']] = i['entity']
+
+            for i in workflow['inputs']:
+                workflowinputs.append("%s" % i['id'])
+                if os.path.basename(i['id']) not in PROVIDED:
+                    assert custom_inputs.get(os.path.basename(i['id']),None) is not None, "Custom inputs do not match hints"
+                    #Check: if synData is used, they must have the correct ACL's
+                    indexFiles = syn.get(custom_inputs.get(os.path.basename(i['id']),None),downloadFile=False)
+                    acls = syn._getACL(indexFiles)
+                    for acl in acls['resourceAccess']:
+                        if acl['principalId'] == CHALLENGE_ADMIN_TEAM_ID:
+                            assert 'READ' in acl['accessType'], "At least View/READ access has to be given to the SMC_RNA_Admins Team: (Team ID: 3322844)"
+
+            #Check: Must contain at least tumor fastq1, 2 as inputs in workflow step
+            for i in ["TUMOR_FASTQ_1","TUMOR_FASTQ_2"]:
+                required = "#main/%s" % i
+                assert required in workflowinputs, "Your workflow MUST contain at least these two inputs: 'TUMOR_FASTQ_1','TUMOR_FASTQ_2'"
+            #Check: If all workflow inputs map to the custom or provided ids
+            if len(workflowinputs) > (len(custom_inputs) + 2):
+                for i in workflowinputs:
+                    assert os.path.basename(i) in PROVIDED or os.path.basename(i) in custom_inputs, "Your specified input ids must be one of: %s" %  ", ".join(custom_inputs.keys()+PROVIDED)
+            for i in workflow['steps']:
+                #Check for v1.0 and draft-3
+                if version == "draft-3":
+                    inputs = "inputs"
+                    outSource = "source"
+                    for y in i['outputs']:
+                        workflowoutputs.append(y['id'])
+                else:
+                    inputs = "in"
+                    outSource = "outputSource"
+                    for y in i['out']:
+                        workflowoutputs.append(y)
+                workflowinputs = workflowinputs + workflowoutputs
+            #Must seperate the input and output colleciton steps
+            for i in workflow['steps']:
+                for y in i[inputs]:
+                    #Check: Workflow tool steps match the cwltools inputs
+                    steps = "%s/#%s/%s" % ("input",i['run'][1:],os.path.basename(y['id']))
+                    assert steps in cwltools, 'Your tool inputs do not match your workflow inputs'
+                    #Check: All sources used are included in the workflow inputs
+                    if 'source' in y:
+                        assert y['source'] in workflowinputs, 'Not all of your inputs in your workflow are mapped'
+            for i in workflow['outputs']:
+                assert i['id'] == '#main/OUTPUT', "Your workflow output id must be OUTPUT"
+                #Check: All outputs have the correct sources mapped
+                if outSource in i:
+                    assert i[outSource] in workflowoutputs, 'Your workflow output is not mapped correctly to your tools'
     else:
-        requiredInputs = []
-        cwltools = []
-        workflowinputs = []
-        workflowoutputs = []
-        merged = docs['$graph']
-        custom_inputs = dict()
-        for tools in merged:
-            if tools['class'] == 'CommandLineTool':
-                for i in tools['inputs']:
-                    cwltools.append("%s/%s" % ("input",i['id']))
-                for i in tools['outputs']:
-                    cwltools.append("%s/%s" % ("output",i['id']))
-            else:
-                #Check: Workflow class
-                assert tools['class'] == 'Workflow', 'CWL Classes can only be named "Workflow" or "CommandLineTool'
-                workflow = tools
-        #Check: Make sure hints for index files are formatted correctly
-        hints = workflow.get("hints",None)
-        if hints is not None:
-            for i in hints:
-                if os.path.basename(i['class']) == "synData":
-                    assert i.get('input', None) is not None or \
-                           i.get('entity', None) is not None, """synData hint must be in this format:
-                                                                            hints:
-                                                                              - class: synData
-                                                                                input: index
-                                                                                entity: syn12345
-                                                              """
-                    custom_inputs[i['input']] = i['entity']
+        assert submission.entity.externalURL.startswith('https://cgc.sbgenomics.com/u'), "Your input URL is not formatted correctly"
+        BASE_URL = "https://cgc-api.sbgenomics.com/v2/"
+        task = requests.get(BASE_URL + "tasks/" + submission.name, headers={"X-SBG-Auth-Token" : args.token} ).json()
+        assert task['status'] == 'COMPLETED', "The URL that you put in is invalid"
 
-        for i in workflow['inputs']:
-            workflowinputs.append("%s" % i['id'])
-            if os.path.basename(i['id']) not in PROVIDED:
-                assert custom_inputs.get(os.path.basename(i['id']),None) is not None, "Custom inputs do not match hints"
-                #Check: if synData is used, they must have the correct ACL's
-                indexFiles = syn.get(custom_inputs.get(os.path.basename(i['id']),None),downloadFile=False)
-                acls = syn._getACL(indexFiles)
-                for acl in acls['resourceAccess']:
-                    if acl['principalId'] == CHALLENGE_ADMIN_TEAM_ID:
-                        assert 'READ' in acl['accessType'], "At least View/READ access has to be given to the SMC_RNA_Admins Team: (Team ID: 3322844)"
-
-        #Check: Must contain at least tumor fastq1, 2 as inputs in workflow step
-        for i in ["TUMOR_FASTQ_1","TUMOR_FASTQ_2"]:
-            required = "#main/%s" % i
-            assert required in workflowinputs, "Your workflow MUST contain at least these two inputs: 'TUMOR_FASTQ_1','TUMOR_FASTQ_2'"
-        #Check: If all workflow inputs map to the custom or provided ids
-        if len(workflowinputs) > (len(custom_inputs) + 2):
-            for i in workflowinputs:
-                assert os.path.basename(i) in PROVIDED or os.path.basename(i) in custom_inputs, "Your specified input ids must be one of: %s" %  ", ".join(custom_inputs.keys()+PROVIDED)
-        for i in workflow['steps']:
-            #Check for v1.0 and draft-3
-            if version == "draft-3":
-                inputs = "inputs"
-                outSource = "source"
-                for y in i['outputs']:
-                    workflowoutputs.append(y['id'])
-            else:
-                inputs = "in"
-                outSource = "outputSource"
-                for y in i['out']:
-                    workflowoutputs.append(y)
-            workflowinputs = workflowinputs + workflowoutputs
-        #Must seperate the input and output colleciton steps
-        for i in workflow['steps']:
-            for y in i[inputs]:
-                #Check: Workflow tool steps match the cwltools inputs
-                steps = "%s/#%s/%s" % ("input",i['run'][1:],os.path.basename(y['id']))
-                assert steps in cwltools, 'Your tool inputs do not match your workflow inputs'
-                #Check: All sources used are included in the workflow inputs
-                if 'source' in y:
-                    assert y['source'] in workflowinputs, 'Not all of your inputs in your workflow are mapped'
-        for i in workflow['outputs']:
-            assert i['id'] == '#main/OUTPUT', "Your workflow output id must be OUTPUT"
-            #Check: All outputs have the correct sources mapped
-            if outSource in i:
-                assert i[outSource] in workflowoutputs, 'Your workflow output is not mapped correctly to your tools'
     return (True,"Passed validation!")
 
 
@@ -203,7 +213,7 @@ config_evaluations_map = {ev['id']:ev for ev in config_evaluations}
 
 
 
-def validate_submission(evaluation, submission):
+def validate_submission(evaluation, submission, token):
     """
     Find the right validation function and validate the submission.
 
@@ -213,7 +223,7 @@ def validate_submission(evaluation, submission):
     config = config_evaluations_map[int(evaluation.id)]
     validation_func = config['validation_function']
     syn = synapseclient.login()
-    results = validation_func(evaluation,submission,syn)
+    results = validation_func(evaluation,submission,syn, token)
     return results
 
 
