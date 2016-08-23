@@ -584,7 +584,7 @@ def main():
     parser_validate = subparsers.add_parser('validate', help="Validate all RECEIVED submissions to an evaluation")
     parser_validate.add_argument("evaluation", metavar="EVALUATION-ID", nargs='?', default=None, )
     parser_validate.add_argument("--all", action="store_true", default=False)
-    parser_validate.add_argument("--token", metavar='API key', required=True)
+    parser_validate.add_argument("--token", metavar='API key', type=str, default=None, required=True)
     parser_validate.set_defaults(func=command_validate)
 
     parser_score = subparsers.add_parser('score', help="Score all VALIDATED submissions to an evaluation")
