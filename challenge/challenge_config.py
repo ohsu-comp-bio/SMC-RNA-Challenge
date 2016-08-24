@@ -182,7 +182,7 @@ def validate(evaluation,submission,syn,token):
     else:
         assert submission.entity.externalURL.startswith('https://cgc.sbgenomics.com/u'), "Your input URL is not formatted correctly"
         BASE_URL = "https://cgc-api.sbgenomics.com/v2/"
-        task = requests.get(BASE_URL + "tasks/" + submission.name, headers={"X-SBG-Auth-Token" : token} ).json()
+        task = requests.get(BASE_URL + "tasks/" + os.path.basename(submission.entity.externalURL), headers={"X-SBG-Auth-Token" : token} ).json()
         assert task['status'] == 'COMPLETED', "The URL that you put in is invalid"
 
     return (True,"Passed validation!")
