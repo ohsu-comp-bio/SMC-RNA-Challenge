@@ -92,7 +92,7 @@ def call_evaluation(cwl, workflow_output, truth, annotations, nocache=False, cac
     if annotations is not None:
         inputs.extend(["--gtf", annotations])
     if output is not None:
-        inputs.extend(["-o", output])
+        inputs.extend(["--o", output])
 
     call_cwl(cwl, inputs, nocache, cachedir)
     # os.remove(local)
