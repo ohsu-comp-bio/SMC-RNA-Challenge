@@ -37,7 +37,7 @@ inputs:
 
   o:
     type:string
-    inputputBinding:
+    inputBinding:
       prefix: -o
       position: 2
 
