@@ -39,7 +39,7 @@ def evaluateFusionQuant(args):
 	if output == "Validated\n":
 		evaluate = subprocess.check_call([evaluator_path, "-t", args.truth,"-i",args.input])
 	else:
-		with open("quantification_result.out",'w') as results:
+		with open("result.out",'w') as results:
 			results.write(output)
 			results.close()
 
