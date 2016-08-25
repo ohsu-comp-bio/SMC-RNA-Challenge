@@ -84,13 +84,15 @@ def call_workflow(cwl, fastq1, fastq2, index_path, nocache=False, cachedir="cwl-
     output = call_cwl(cwl, inputs, nocache, cachedir)
     return(output)
 
-def call_evaluation(cwl, workflow_output, truth, annotations, nocache=False, cachedir="cwl-cache"):
+def call_evaluation(cwl, workflow_output, truth, annotations, nocache=False, cachedir="cwl-cache",output=None):
     # local = "eval-workflow.cwl"
     # shutil.copyfile(cwl, local)
     inputs = ["--input", workflow_output,
               "--truth", truth]
     if annotations is not None:
         inputs.extend(["--gtf", annotations])
+    if output is not None:
+        inputs.extend(["--o", output])
 
     call_cwl(cwl, inputs, nocache, cachedir)
     # os.remove(local)
@@ -186,7 +188,7 @@ def run_test(syn,args):
         truth = os.path.abspath(os.path.join(args.dir, args.input + "_filtered.bedpe"))
         annots = syn.get("syn5908245")
         annotations = annots.path
-        call_evaluation(cwl, workflow_out, truth, annotations, args.no_cache, cachedir=args.cachedir)
+        call_evaluation(cwl, workflow_out, truth, annotations, args.no_cache, cachedir=args.cachedir, output="detection_result.out")
     #elif args.challenge == "fusionQuant":
         cwl = os.path.join(os.path.dirname(__file__),"..","FusionQuantification","cwl","FusionQuantWorkflow.cwl")
         truth = os.path.abspath(os.path.join(args.dir, args.input + "_filtered.bedpe"))

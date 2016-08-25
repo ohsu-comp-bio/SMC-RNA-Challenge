@@ -18,6 +18,9 @@ inputs:
   gtf:
     type: File
 
+  o:
+    type: string
+
 outputs:
 
   - id: OUTPUT
@@ -32,4 +35,5 @@ steps:
       truth: truth
       input: input
       gtf: gtf
+      o: o
     out: [output]

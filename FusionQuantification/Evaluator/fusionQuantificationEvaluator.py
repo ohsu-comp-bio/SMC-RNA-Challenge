@@ -157,7 +157,7 @@ def main(argv):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         final = calculateCor()
-        with open("result.out",'w') as results:
+        with open("quantification_result.out",'w') as results:
             results.write(final)
             results.close()
     return(0)
