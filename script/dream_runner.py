@@ -181,22 +181,23 @@ def run_test(syn,args):
     tmp.write(json.dumps(in_req))
     tmp.close()
     workflow_out = call_cwl(args.workflow, [tmp.name], args.no_cache, cachedir=args.cachedir)
-    if args.challenge == "fusionDet":
+    if args.challenge == "fusion":
         cwl = os.path.join(os.path.dirname(__file__),"..","FusionDetection","cwl","FusionEvalWorkflow.cwl")
         truth = os.path.abspath(os.path.join(args.dir, args.input + "_filtered.bedpe"))
         annots = syn.get("syn5908245")
         annotations = annots.path
-    elif args.challenge == "fusionQuant":
+        call_evaluation(cwl, workflow_out, truth, annotations, args.no_cache, cachedir=args.cachedir)
+    #elif args.challenge == "fusionQuant":
         cwl = os.path.join(os.path.dirname(__file__),"..","FusionQuantification","cwl","FusionQuantWorkflow.cwl")
         truth = os.path.abspath(os.path.join(args.dir, args.input + "_filtered.bedpe"))
         annots = syn.get("syn5908245")
-        annotations = None       
+        annotations = None
     elif args.challenge == "isoform":
         cwl = os.path.join(os.path.dirname(__file__),"..","IsoformQuantification","cwl","QuantificationEvalWorkflow.cwl")
         truth = os.path.abspath(os.path.join(args.dir, args.input + "_isoforms_truth.txt"))
         annotations = os.path.abspath(os.path.join(args.dir, "Homo_sapiens.GRCh37.75.gtf"))
     else:
-        raise ValueError("Please pick either 'fusionDet', 'fusionQuant' or 'isoform' for challenges")
+        raise ValueError("Please pick either 'fusion' or 'isoform' for challenges")
     call_evaluation(cwl, workflow_out, truth, annotations, args.no_cache, cachedir=args.cachedir)
 
 def run_inputs(syn,args):
@@ -259,7 +260,7 @@ if __name__ == '__main__':
     parser_inputs.add_argument("workflow", type = str,
         help='Non merged workflow file')
     parser_inputs.add_argument("challenge", type = str,
-        help='Choose the challenge question: fusionDet, fusionQuant or isoform')
+        help='Choose the challenge question: fusion or isoform')
     parser_inputs.add_argument("--no-cache", action='store_true',
         help='Do not cache workflow steps')
     parser_inputs.add_argument("--cachedir", type=str, default="cwl-cache",

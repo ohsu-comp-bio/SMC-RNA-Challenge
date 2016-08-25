@@ -40,6 +40,6 @@ outputs:
   output:
     type: File
     outputBinding:
-      glob: result.out
+      glob: detection_result.out
 
 

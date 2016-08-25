@@ -18,7 +18,7 @@ def evaluateFusionDet(args):
 	if output == "Validated\n":
 		evaluate = subprocess.check_call(["fusionToolEvaluator", "-t", args.truth,"-r",args.input,"-g", args.gtf,"-s",rule_file,"-o","result.out"])
 	else:
-		with open("result.out",'w') as results:
+		with open("detection_result.out",'w') as results:
 			results.write(output)
 			results.close()
 
@@ -39,7 +39,7 @@ def evaluateFusionQuant(args):
 	if output == "Validated\n":
 		evaluate = subprocess.check_call([evaluator_path, "-t", args.truth,"-i",args.input])
 	else:
-		with open("result.out",'w') as results:
+		with open("quantification_result.out",'w') as results:
 			results.write(output)
 			results.close()
 
