@@ -88,7 +88,6 @@ parser_evaluateFusionDet.add_argument('--gtf', help='Fusion Detection gene annot
 parser_evaluateFusionDet.add_argument('--input',  metavar='results.bedpe', type=str, required=True,
 		help='bedpe format file'),
 parser_evaluateFusionDet.add_argument('--truth', help='Truth file', metavar='truth.bedpe',type=str,required=True)
-parser_evaluateFusionDet.add_argument('-o', help='Output file', metavar='detection_result.out',type=str,required=True)
 parser_evaluateFusionDet.set_defaults(func=evaluateFusionDet)
 
 parser_evaluateFusionQuant = subparsers.add_parser('evaluateFusionQuant',

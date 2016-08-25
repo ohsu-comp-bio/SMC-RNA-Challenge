@@ -35,17 +35,11 @@ inputs:
       prefix: --gtf
       position: 1
 
-  o:
-    type: string
-    inputBinding:
-      prefix: -o
-      position: 2
-
 outputs:
 
   output:
     type: File
     outputBinding:
-      glob: $(inputs.o)
+      glob: $('detection_result.out')
 
 

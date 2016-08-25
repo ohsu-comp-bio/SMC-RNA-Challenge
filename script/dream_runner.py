@@ -84,15 +84,13 @@ def call_workflow(cwl, fastq1, fastq2, index_path, nocache=False, cachedir="cwl-
     output = call_cwl(cwl, inputs, nocache, cachedir)
     return(output)
 
-def call_evaluation(cwl, workflow_output, truth, annotations, nocache=False, cachedir="cwl-cache",output=None):
+def call_evaluation(cwl, workflow_output, truth, annotations, nocache=False, cachedir="cwl-cache"):
     # local = "eval-workflow.cwl"
     # shutil.copyfile(cwl, local)
     inputs = ["--input", workflow_output,
               "--truth", truth]
     if annotations is not None:
         inputs.extend(["--gtf", annotations])
-    if output is not None:
-        inputs.extend(["--o", output])
 
     call_cwl(cwl, inputs, nocache, cachedir)
     # os.remove(local)
