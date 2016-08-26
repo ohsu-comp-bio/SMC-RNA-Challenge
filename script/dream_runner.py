@@ -189,8 +189,8 @@ def run_test(syn,args):
         call_evaluation(cwl, workflow_out, truth, annotations, args.no_cache, cachedir=args.cachedir)
     #elif args.challenge == "fusionQuant":
         cwl = os.path.join(os.path.dirname(__file__),"..","FusionQuantification","cwl","FusionQuantWorkflow.cwl")
-        truth = os.path.abspath(os.path.join(args.dir, args.input + "_filtered.bedpe"))
-        annots = syn.get("syn5908245")
+        #truth = os.path.abspath(os.path.join(args.dir, args.input + "_filtered.bedpe"))
+        #annots = syn.get("syn5908245")
         annotations = None
     elif args.challenge == "isoform":
         cwl = os.path.join(os.path.dirname(__file__),"..","IsoformQuantification","cwl","QuantificationEvalWorkflow.cwl")

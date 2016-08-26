@@ -26,9 +26,6 @@ def evaluateFusionQuant(args):
 	validator_path = os.path.join(os.path.dirname(__file__), "..", "FusionDetection", "Validator", "bedpeValidatorS.py")
 	chrom_path = os.path.join(os.path.dirname(__file__), "..", "FusionDetection", "Validator", "GRCh37.chromosome.strict.txt")
 	evaluator_path = os.path.join(os.path.dirname(__file__), "..", "FusionQuantification", "Evaluator", "fusionQuantificationEvaluator.py")
-	print(validator_path)
-	print(chrom_path)
-	print(evaluator_path)
 	try:
 		val = subprocess.Popen([validator_path, "-c", chrom_path, "-i",args.input],stdout=subprocess.PIPE)
 		output = val.stdout.read()

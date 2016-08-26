@@ -372,6 +372,7 @@ int Annotate::getCanonical(fusion_junction_t & fjt, bedpe_t & b)
     }
     return res;
  
+
 }
 
 
