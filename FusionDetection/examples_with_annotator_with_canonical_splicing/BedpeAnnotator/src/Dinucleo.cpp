@@ -65,7 +65,6 @@ int Dinucleo::isCanoSplice(string chr5, string strand5, uint32_t junc5, string c
         threeone=getCharComp(ref.getRefChar(ref.to_ref_pos(chr3,junc3+2)));//+1 and +2 need to check boundary
         threetwo=getCharComp(ref.getRefChar(ref.to_ref_pos(chr3,junc3+1)));
     }
-    
     return isCanoSplice(fiveone, fivetwo, threeone, threetwo);
 }
 

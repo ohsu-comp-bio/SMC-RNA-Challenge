@@ -55,16 +55,38 @@ int Annotate::assignJunctions(Gene& g, Reference & ref, Bedpe & bdpe) {
                 {
                     getRefExonSeq(ref,j1[x].chr,j1[x].pos1+1,j1[x].pos2,j1[x].strand,fjt.seq1);
                     getRefExonSeq(ref,j2[y].chr,j2[y].pos1+1,j2[y].pos2,j2[y].strand,fjt.seq2);
+<<<<<<< HEAD
                     fjt.p5=j1[x];
                     fjt.p3=j2[y];
+=======
+              
+                    fjt.p5=j1[x];
+                    fjt.p3=j2[y];
+                    // to real position not 0 based
+                    if(b.strand1.compare("-")==0)
+                        fjt.p5.pos1=fjt.p5.pos1+1;
+                    if(b.strand2.compare("+")==0)
+                        fjt.p3.pos1=fjt.p3.pos1+1;
+>>>>>>> 6859bfb8ceedab516f0e336a704f44ba47f13427
 
                 }
                 else if(j1[x].is5p==0 && j2[y].is5p==1)
                 {
                     getRefExonSeq(ref,j2[y].chr,j2[y].pos1+1,j2[y].pos2,j2[y].strand,fjt.seq1);
                     getRefExonSeq(ref,j1[x].chr,j1[x].pos1+1,j1[x].pos2,j1[x].strand,fjt.seq2);
+<<<<<<< HEAD
                     fjt.p5=j2[y];
                     fjt.p3=j1[x];
+=======
+              
+                    fjt.p5=j2[y];
+                    fjt.p3=j1[x];
+                    // to real position not 0 based
+                    if(b.strand2.compare("-")==0)
+                        fjt.p5.pos1=fjt.p5.pos1+1;
+                    if(b.strand1.compare("+")==0)
+                        fjt.p3.pos1=fjt.p3.pos1+1;
+>>>>>>> 6859bfb8ceedab516f0e336a704f44ba47f13427
 
                 }
                 fjtvec.push_back(fjt);
@@ -360,9 +382,11 @@ int Annotate::getCanonical(fusion_junction_t & fjt, bedpe_t & b)
         a.strand2="+";
     else
         a.strand2="-";
-    
-        int res=bp.isBedpeSame(a,b);
-    
+
+
+//cout<<a.strand1<<"\t"<<a.start1<<"\t"<<a.end1<<"\t"<<a.strand2<<"\t"<<a.start2<<"\t"<<a.end2<<endl;
+
+    int res=bp.isBedpeSame(a,b);
     if(res==1)
     {
         b.start1=a.start1;
@@ -371,7 +395,6 @@ int Annotate::getCanonical(fusion_junction_t & fjt, bedpe_t & b)
         b.end2=a.end2;
     }
     return res;
- 
 }
 
 
