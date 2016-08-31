@@ -16,7 +16,7 @@ def evaluateFusionDet(args):
 		output = str(e)
 		print(output)
 	if output == "Validated\n":
-		evaluate = subprocess.check_call(["fusionToolEvaluator", "-t", args.truth,"-r",args.input,"-g", args.gtf,"-s",rule_file,"--output-file","detection_result.out"])
+		evaluate = subprocess.check_call(["fusionToolEvaluator", "-t", args.truth,"-r",args.input,"-g", args.gtf,"-s",rule_file,"-o","detection_result.out"])
 	else:
 		with open("detection_result.out",'w') as results:
 			results.write(output)
