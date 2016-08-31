@@ -34,6 +34,6 @@ outputs:
   output:
     type: File
     outputBinding:
-      glob: quantification_result
+      glob: quantification_result.out
 
 
