@@ -51,6 +51,7 @@ import uuid
 import warnings
 import shutil
 import yaml
+import subprocess
 
 try:
     import challenge_config as conf
