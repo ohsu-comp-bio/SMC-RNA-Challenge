@@ -436,19 +436,34 @@ def archive(evaluation, destination=None, name=None, query=None):
                                         #Store index files
                                         os.system('gsutil cp %s gs://smc-rna-cache/%s/%s' % (temp.path,path,submissionId))
                 os.system('rm -rf ~/.synapseCache/*')
-                #Pull, save, and store docker containers
-                docker = set(docker)
-                for i in docker:
-                    os.system('sudo docker pull %s' % i)
-                    os.system('sudo docker save %s' % i)
-                    os.system('sudo docker save -o %s.tar %s' %(os.path.basename(i),i))
-                    os.system('sudo chmod a+r %s.tar' % os.path.basename(i))
-                    os.system('gsutil cp %s.tar gs://smc-rna-cache/%s/%s' % (os.path.basename(i),path,submissionId))
-                    os.remove("%s.tar" % os.path.basename(i))
-            #else:
-            #    os.system('rm %s' % os.path.join(submissionId, submission.name))
-            #    test = subprocess.check_call(["python", os.path.join(os.path.dirname(__file__),"../../SMC-RNA-Eval/sbg-download.py"), "--token", token, submission.name, submissionId])
-            #    os.system('gsutil cp -R %s gs://smc-rna-cache' % submissionId)
+            else:
+                os.system('rm %s' % os.path.join(submissionId, submission.name))
+                test = subprocess.check_call(["python", os.path.join(os.path.dirname(__file__),"../../SMC-RNA-Eval/sbg-download.py"), "--token", token, submission.name, submissionId])
+                os.system('gsutil cp -R %s gs://smc-rna-cache' % submissionId)
+                #Pull down docker containers
+                with open("%s/submission.cwl" % submissionId,"r") as cwlfile:
+                    docs = yaml.load(cwlfile)
+                    merged = docs['steps']
+                    docker = []
+                    for tools in merged:
+                        for hint in tools['run']['hints']:
+                            if hint['class'] == 'DockerRequirement':
+                                docker.append(hint['dockerPull'])
+                        for require in tools['run']['requirements']:
+                            if require.get('requirements') is not None:
+                                for i in require.get('requirements'):
+                                    if i['class'] == 'DockerRequirement':
+                                        docker.append(i['dockerPull'])
+                os.system('rm -rf %s' submissionId)
+            #Pull, save, and store docker containers
+            docker = set(docker)
+            for i in docker:
+                os.system('sudo docker pull %s' % i)
+                os.system('sudo docker save %s' % i)
+                os.system('sudo docker save -o %s.tar %s' %(os.path.basename(i),i))
+                os.system('sudo chmod a+r %s.tar' % os.path.basename(i))
+                os.system('gsutil cp %s.tar gs://smc-rna-cache/%s/%s' % (os.path.basename(i),path,submissionId))
+                os.remove("%s.tar" % os.path.basename(i))
             os.system('rm -rf %s' % submissionId)
 
 
