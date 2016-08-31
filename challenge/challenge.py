@@ -407,7 +407,6 @@ def archive(evaluation, destination=None, token=None, name=None, query=None):
         check = syn.query('select id,name from folder where parentId == "%s" and name == "%s"' % (destination,submissionId))
         if check['totalNumberOfResults']==0:
             os.mkdir(submissionId)
-            submission_parent = syn.store(Folder(submissionId,parent=destination))
             submission = syn.getSubmission(submissionId, downloadLocation=submissionId)
             if submission.entity.externalURL is None:
                 newFilePath = submission.filePath.replace(' ', '_')
@@ -466,6 +465,8 @@ def archive(evaluation, destination=None, token=None, name=None, query=None):
                 os.system('gsutil cp %s.tar gs://smc-rna-cache/%s/%s' % (os.path.basename(i),path,submissionId))
                 os.remove("%s.tar" % os.path.basename(i))
             os.system('rm -rf %s' % submissionId)
+            submission_parent = syn.store(Folder(submissionId,parent=destination))
+
 
 
 ## ==================================================
