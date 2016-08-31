@@ -382,7 +382,7 @@ def list_evaluations(project):
         print "Evaluation: %s" % evaluation.id, evaluation.name.encode('utf-8')
 
 #Special archive function written for SMC-RNA
-def archive(evaluation, destination=None, name=None, query=None):
+def archive(evaluation, destination=None, token=None, name=None, query=None):
     """
     Archive the submissions for the given evaluation queue and store them in the destination synapse folder.
 
@@ -553,7 +553,7 @@ def command_leaderboard(args):
 
 
 def command_archive(args):
-    archive(args.evaluation, args.destination, name=args.name, query=args.query)
+    archive(args.evaluation, destionation=args.destination, token=args.token, name=args.name, query=args.query)
 
 
 ## ==================================================
@@ -614,6 +614,7 @@ def main():
     parser_archive = subparsers.add_parser('archive', help="Archive submissions to a challenge")
     parser_archive.add_argument("evaluation", metavar="EVALUATION-ID", default=None)
     parser_archive.add_argument("destination", metavar="FOLDER-ID", default=None)
+    parser_archive.add_argument("token", metavar="seven bridges token API", default=None)
     parser_archive.add_argument("-q", "--query", default=None)
     parser_archive.add_argument("-n", "--name", default=None)
     parser_archive.set_defaults(func=command_archive)
