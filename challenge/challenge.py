@@ -553,7 +553,7 @@ def command_leaderboard(args):
 
 
 def command_archive(args):
-    archive(args.evaluation, destionation=args.destination, token=args.token, name=args.name, query=args.query)
+    archive(args.evaluation, destination=args.destination, token=args.token, name=args.name, query=args.query)
 
 
 ## ==================================================
