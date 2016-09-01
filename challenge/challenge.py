@@ -464,7 +464,6 @@ def archive(evaluation, destination=None, token=None, name=None, query=None):
                 os.system('sudo chmod a+r %s.tar' % os.path.basename(i))
                 os.system('gsutil cp %s.tar gs://smc-rna-cache/%s/%s' % (os.path.basename(i),path,submissionId))
                 os.remove("%s.tar" % os.path.basename(i))
-            os.system('rm -rf %s' % submissionId)
             submission_parent = syn.store(Folder(submissionId,parent=destination))
 
 
