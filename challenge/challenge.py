@@ -461,7 +461,7 @@ def archive(evaluation, destination=None, token=None, name=None, query=None):
                 fileName = os.path.basename(i).replace(":","_")
                 os.system('sudo -i docker pull %s' % i)
                 #os.system('sudo -i docker save %s' % i)
-                os.system('sudo -i docker save -o %s.tar %s' %(fileName,i))
+                os.system('sudo docker save -o %s.tar %s' %(fileName,i))
                 os.system('sudo chmod a+r %s.tar' % fileName)
                 os.system('gsutil cp %s.tar gs://smc-rna-cache/%s/%s' % (fileName,path,submissionId))
                 os.remove("%s.tar" % fileName)
