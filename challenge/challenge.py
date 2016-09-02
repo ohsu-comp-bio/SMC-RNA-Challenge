@@ -439,7 +439,7 @@ def archive(evaluation, destination=None, token=None, name=None, query=None):
             else:
                 os.system('rm %s' % os.path.join(submissionId, submission.name))
                 test = subprocess.check_call(["python", os.path.join(os.path.dirname(__file__),"../../SMC-RNA-Eval/sbg-download.py"), "--token", token, submission.name, submissionId])
-                os.system('gsutil cp -R %s gs://smc-rna-cache' % submissionId)
+                os.system('gsutil cp -R %s gs://smc-rna-cache/%s' % (submissionId,path))
                 #Pull down docker containers
                 with open("%s/submission.cwl" % submissionId,"r") as cwlfile:
                     docs = yaml.load(cwlfile)
