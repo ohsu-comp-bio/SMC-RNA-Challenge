@@ -454,7 +454,7 @@ def archive(evaluation, destination=None, token=None, name=None, query=None):
                                 for i in require.get('requirements'):
                                     if i['class'] == 'DockerRequirement':
                                         docker.append(i['dockerPull'])
-                os.system('rm -rf %s' % submissionId)
+            os.system('rm -rf %s' % submissionId)
             #Pull, save, and store docker containers
             docker = set(docker)
             for i in docker:
