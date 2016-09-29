@@ -9,7 +9,7 @@ python challenge.py -u SMC_RNA --send-messages --acknowledge-receipt --notificat
 #--------------------
 #Score submissions
 #--------------------
-#python challenge.py -u SMC_RNA --send-messages --notifications score --all >> log/score.log 2>&1
+python challenge.py -u SMC_RNA --send-messages --notifications score --all >> log/score.log 2>&1
 
 #--------------------
 #Cache submissions
