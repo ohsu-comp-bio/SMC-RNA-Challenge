@@ -21,7 +21,7 @@ import synapseclient.utils as utils
 import synapseutils as synu
 from synapseclient.exceptions import *
 from synapseclient import Activity
-from synapseclient import Project, Folder, File
+from synapseclient import Project, Folder, File, Table
 from synapseclient import Evaluation, Submission, SubmissionStatus
 from synapseclient import Wiki
 from synapseclient import Column
@@ -403,6 +403,8 @@ def archive(evaluation, destination=None, token=None, name=None, query=None):
     for result in results:
         #Check if the folder has already been created in synapse 
         #(This is used as a tool to check submissions that have already been cached)
+        new_map = []
+        mapping = syn.get("syn7348150")
         submissionId = result[results.headers.index('objectId')]
         check = syn.query('select id,name from folder where parentId == "%s" and name == "%s"' % (destination,submissionId))
         if check['totalNumberOfResults']==0:
@@ -433,6 +435,8 @@ def archive(evaluation, destination=None, token=None, name=None, query=None):
                                 for i in tools['hints']:
                                     if os.path.basename(i['class']) == "synData":
                                         temp = syn.get(i['entity'])
+                                        #create synid and index mapping
+                                        new_map.append([temp.id,"gs://smc-rna-cache/%s/%s/%s" %(path,submissionId,temp.name)])
                                         #Store index files
                                         os.system('gsutil cp %s gs://smc-rna-cache/%s/%s' % (temp.path,path,submissionId))
                 os.system('rm -rf ~/.synapseCache/*')
@@ -455,6 +459,8 @@ def archive(evaluation, destination=None, token=None, name=None, query=None):
                                     if i['class'] == 'DockerRequirement':
                                         docker.append(i['dockerPull'])
             os.system('rm -rf %s' % submissionId)
+            if len(new_map) > 0:
+                table = syn.store(Table(mapping, new_map))
             #Pull, save, and store docker containers
             docker = set(docker)
             for i in docker:
