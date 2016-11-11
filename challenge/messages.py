@@ -68,7 +68,7 @@ scoring_succeeded_subject_template = "Scored submission to {queue_name}"
 scoring_succeeded_template = """\
 Hello {username},
 
-Your submission \"{submission_name}\" (ID: {submission_id}) to the {queue_name} has been scored:
+Your submission \"{submission_name}\" (ID: {submission_id}) to the {queue_name} has been validated:
 
 {message}
 
