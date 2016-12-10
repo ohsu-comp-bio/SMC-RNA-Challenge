@@ -2,6 +2,7 @@
 
 from __future__ import print_function
 
+import re
 import os
 import yaml
 import shutil
@@ -16,8 +17,6 @@ import getpass
 from sys import argv
 
 DREAM_RNA_BUCKET = "gs://dream-smc-rna"
-DREAM_TRAINING = ['sim1','sim2','sim3','sim4','sim5','sim7','sim8','sim11','sim13','sim14','sim15','sim16','sim17','sim19','sim21']
-DREAM_DEBUG = ["dryrun1","dryrun2","dryrun3","dryrun4","dryrun5"]
 
 REFERENCE_DATA = {
     "REFERENCE_GENOME" : "Homo_sapiens.GRCh37.75.dna_sm.primary_assembly.fa",
@@ -113,19 +112,16 @@ def download(synapse,args):
         subprocess.check_call(["gsutil", "ls" ,DREAM_RNA_BUCKET])
     except Exception as e:
         raise ValueError("You are not logged in to gcloud.  Please login by doing 'gcloud auth login' and follow the steps to have access to the google bucket")
-    if args.input in DREAM_TRAINING or args.input in DREAM_DEBUG:
-        print("Caching Inputs files", file=sys.stderr)
-        for suf in FILE_SUFFIX:
-            local_path = os.path.join(args.dir, args.input + suf)
-            if not os.path.exists(local_path):
-                if args.input in DREAM_TRAINING:
-                    data = "%s/training/%s_*" % (DREAM_RNA_BUCKET, args.input)
-                elif args.input in DREAM_DEBUG:
-                    data = "%s/debugging/%s_*" % (DREAM_RNA_BUCKET, args.input)                    
-                cmd = ["gsutil","cp", data, args.dir]
-                subprocess.check_call(cmd)
-    else:
-        raise ValueError("Must pass in one of these options for downloading training/debugging data: %s" % ', '.join(DREAM_TRAINING + DREAM_DEBUG))
+    print("Caching Inputs files", file=sys.stderr)
+    for suf in FILE_SUFFIX:
+        local_path = os.path.join(args.dir, args.input + suf)
+        if not os.path.exists(local_path):
+            if args.input.startswith("sim"):
+                data = "%s/training/%s_*" % (DREAM_RNA_BUCKET, args.input)
+            elif args.input.startswith("dryrun"):
+                data = "%s/debugging/%s_*" % (DREAM_RNA_BUCKET, args.input)                    
+            cmd = ["gsutil","cp", data, args.dir]
+            subprocess.check_call(cmd)
 
 def gen_inputs(syn,args):
     with open(args.workflow) as handle:
@@ -203,7 +199,20 @@ def run_test(syn,args):
 def run_inputs(syn,args):
     in_req = gen_inputs(syn,args)
     print(json.dumps(in_req, indent=4))
-    
+
+def run_list(syn,args):
+    cmd = ["gsutil", "ls", "%s/training/*.fq.gz" % (DREAM_RNA_BUCKET)]
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+    stdout, stderr = proc.communicate()
+    out = []
+    for line in stdout.split("\n"):
+        if line.startswith("gs://"):
+            res = re.search(r'(sim.*)_merge', line)
+            if res:
+                if res.group(1) not in out:
+                    out.append(res.group(1))
+    print("\n".join(out))
+
 def perform_main(args):
     synapse = synapse_login()
     if 'func' in args:
@@ -230,7 +239,7 @@ if __name__ == '__main__':
     
     parser_download = subparsers.add_parser('download',help='Downloads training and dry-run data')
     parser_download.add_argument('input', type=str,
-        help='download training or dry data: %s' % ( ", ".join(DREAM_TRAINING+DREAM_DEBUG)))
+        help='download training or dry data')
     parser_download.add_argument('--dir', default="./", type=str, 
         help='Directory to download files to')
     parser_download.add_argument('--bucket', default="gs://dream-smc-rna")
@@ -240,7 +249,7 @@ if __name__ == '__main__':
     parser_test.add_argument("--dir", type=str, default="./",
         help='Directory to download data to')
     parser_test.add_argument("input", type = str,
-        help='Training/debugging dataset to use: %s' % ( ", ".join(DREAM_TRAINING+DREAM_DEBUG)))
+        help='Training/debugging dataset to use')
     parser_test.add_argument("workflow", type = str,
         help='Non merged workflow file')
     parser_test.add_argument("challenge", type = str,
@@ -256,7 +265,7 @@ if __name__ == '__main__':
     parser_inputs.add_argument("--dir", type=str, default="./",
         help='Directory to download data to')
     parser_inputs.add_argument("input", type = str,
-        help='Training/debugging dataset to use: %s' % ( ", ".join(DREAM_TRAINING+DREAM_DEBUG)))
+        help='Training/debugging dataset to use' )
     parser_inputs.add_argument("workflow", type = str,
         help='Non merged workflow file')
     parser_inputs.add_argument("challenge", type = str,
@@ -267,6 +276,10 @@ if __name__ == '__main__':
         help='Directory to cache cwl run')
     parser_inputs.add_argument('--bucket', default="gs://dream-smc-rna")
     parser_inputs.set_defaults(func=run_inputs)
+    
+    parser_list = subparsers.add_parser('list',help='List Avalible tumors')
+    parser_list.add_argument('--bucket', default="gs://dream-smc-rna")
+    parser_list.set_defaults(func=run_list)
 
 
     args = parser.parse_args()
