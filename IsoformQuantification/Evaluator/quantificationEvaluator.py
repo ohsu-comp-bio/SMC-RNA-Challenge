@@ -5,6 +5,7 @@ import os
 import math
 import getopt
 import warnings
+import numpy
 from collections import Counter 
 from collections import defaultdict
 from scipy import stats
@@ -87,7 +88,11 @@ def getBothValues():
 
 def calculateCor():
     cor,p_value=stats.spearmanr(truth_values,input_values)
-    final = "spearman\tp-value\n%s\t%s" % (cor,p_value)
+    pearson,pearson_pvalue=stats.pearsonr(truth_values,input_values)
+    log_pearson,log_pearson_pvalue=stats.pearsonr(numpy.log(numpy.add(truth_values,0.01)),numpy.log(numpy.add(input_values,0.01)))
+
+    final = "spearman\tpearson\tlog_pearson\n%s\t%s\t%s" % (cor,pearson,log_pearson) 
+
     print(final)
     return(final)
 
