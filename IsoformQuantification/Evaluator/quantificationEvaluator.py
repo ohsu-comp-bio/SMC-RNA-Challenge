@@ -16,8 +16,8 @@ def usage():
     quantificationEvaluator -t <truth-tsv>  -i <input-tsv>
     
     Requested Parameters:
-        -t/--truth-tsv         [ string                          path to truth tsv                      ]
-        -i/--input-tsv         [ string                          path to input tsv                      ]
+        -t/--truth-tsv         [ string                         path to truth tsv                      ]
+        -i/--input-tsv         [ string                         path to input tsv                      ]
     
     Optional Parameters:
         -s/--stratify          [ string k:s_1,s_2,...,s_k-1:v   k: number of classes                    
@@ -29,23 +29,31 @@ def usage():
                                       -s 3                      3 classes, separate at 33%,66%          
                                       -s 4:10,50,90             4 classes, spearete at 10%,50%,90%      
                                       -s 4:0.5,1,10,100:v       4 classes, separete at the values       
-                                 Note: bases on truth-tsv                                               ]     
+                                 Note: bases on truth-tsv                                              ]     
+        -b/--binary            [ no/yes default: no             If turns on (i.e. yes), correlations   
+                                                                will only be caculated based on entries
+                                                                with non-zero values in the truth tsv. ]             
+        -o/--output            [ string default: ./result       output prefix                          ]
  
-    Version:                   1.2.0
+    Version:                   1.3.0
           """
 
 
 #parameters
-inFile = ''               #input tsv
-inTruthFile = ''          #input truth tsv
-stratify = '1'            #range separators string
+inFile = ''                     #input tsv
+inTruthFile = ''                #input truth tsv
+stratify = '1'                  #range separators string
+isBinary = 'no'                 #bin or not bin
+output_prefix = './result'      #output prefix
 
 def getParameters(argv):
     try:
-        opts, args = getopt.getopt(argv,"ht:i:s:",["help",
-                                                   "truth-tsv=",
-                                                   "input-tsv=",
-                                                   "stratify="])
+        opts, args = getopt.getopt(argv,"ht:i:s:b:o:",["help",
+                                                       "truth-tsv=",
+                                                       "input-tsv=",
+                                                       "stratify=",
+                                                       "isBinary=",
+                                                       "output="])
     except getopt.GetoptError:
         usage()
         sys.exit(1)
@@ -62,6 +70,12 @@ def getParameters(argv):
         elif opt in ("-s","--stratify"):
             global stratify
             stratify = arg
+        elif opt in ("-b","--binary"):
+            global isBinary
+            isBinary = arg
+        elif opt in ("-o","--output"):
+            global output_prefix
+            output_prefix= arg
 
 input_values_dic = defaultdict(lambda: 0.0)
 
@@ -80,6 +94,20 @@ def getInputDic():
             value=float(tmp[1][0:len(tmp[1])-1])
             input_values_dic[name]=value
 
+def checkIsBinary():
+    global isBinary
+    if isBinary == 'no':
+        return
+    else:
+        if isBinary == 'Y' or isBinary =='y' or isBinary== 'Yes' or isBinary == 'yes':
+            return
+        else:
+            print "--binary: must be yes or no."
+            exit(1)
+
+truth_values_zero = []
+input_values_zero = []
+
 truth_values = []
 input_values = []
 
@@ -96,11 +124,20 @@ def getBothValues():
             tmp=line.split("\t")
             name=tmp[0]
             value=float(tmp[1][0:len(tmp[1])-1])
-            truth_values.append(value)
-            if input_values_dic.get(name) is not None:
-                input_values.append(input_values_dic[name])
+            if isBinary != 'no' and value ==0.0:
+                truth_values_zero.append(0.0)
             else:
-                input_values.append(0)
+                truth_values.append(value)
+            if input_values_dic.get(name) is not None:
+                if isBinary != 'no' and value ==0.0:
+                    input_values_zero.append(input_values_dic[name])
+                else:
+                    input_values.append(input_values_dic[name])
+            else:
+                if isBinary != 'no' and value ==0.0:
+                    input_values_zero.append(0.0)
+                else:
+                    input_values.append(0.0)
 
 
 def percentToValues(percents):
@@ -196,6 +233,12 @@ def getBothStrafiedVectors():
             truth_values_vec[sid].append(truth_values[x])
             input_values_vec[sid].append(input_values[x])
 
+def printBinary():
+    ofstring = 'off'
+    if isBinary!='no':
+        ofstring = 'on'
+    print "Binning zero and non-zero values: "+ofstring+"\n"
+
 def printStratify():
     print "The stratification used is: -s "+stratify
     print "The separators are:         ",' '.join(map(str, separators))
@@ -215,8 +258,12 @@ def calculateCor():
         cor,p_value=stats.spearmanr(truth_values_vec[x],input_values_vec[x])
         pearson,pearson_pvalue=stats.pearsonr(truth_values_vec[x],input_values_vec[x])
         log_pearson,log_pearson_pvalue=stats.pearsonr(numpy.log(numpy.add(truth_values_vec[x],0.01)),numpy.log(numpy.add(input_values_vec[x],0.01)))
-        tmp  = "\n[%s,%s)\t%s\t%s\t%s" % (srangeL[x],srangeR[x],cor,pearson,log_pearson)
-        tmp2 = "\n[%.3f,%.3f)\t\t%.3f\t\t%.3f\t\t%.3f" % (srangeL[x],srangeR[x],cor,pearson,log_pearson)        
+        if isBinary != 'no' and x<=1:
+            tmp  = "\n(%s,%s)\t%s\t%s\t%s" % (srangeL[x],srangeR[x],cor,pearson,log_pearson)
+            tmp2 = "\n(%.3f,%.3f)\t\t%.3f\t\t%.3f\t\t%.3f" % (srangeL[x],srangeR[x],cor,pearson,log_pearson)        
+        else:
+            tmp  = "\n[%s,%s)\t%s\t%s\t%s" % (srangeL[x],srangeR[x],cor,pearson,log_pearson)
+            tmp2 = "\n[%.3f,%.3f)\t\t%.3f\t\t%.3f\t\t%.3f" % (srangeL[x],srangeR[x],cor,pearson,log_pearson)
         final  = final  + tmp
         final2 = final2 + tmp2
         if x==0 and len(srangeL)!=1:
@@ -224,6 +271,19 @@ def calculateCor():
     print(final2)
     print
     return(final)
+
+def calculateFDR():
+    final = "FDR:\t"
+    total_zero_num=len(truth_values_zero)
+    input_zero_num=0
+    for x in range(len(input_values_zero)):
+        if input_values_zero[x]!=0.0:
+            input_zero_num=input_zero_num+1
+    fdr_str = str(numpy.float32(input_zero_num)/float(total_zero_num))
+    final = final + fdr_str
+    print
+    print final
+    return final
 
 def main(argv):
     getParameters(argv[1:])
@@ -238,9 +298,14 @@ def main(argv):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         final = calculateCor()
-        with open("result.out",'w') as results:
+        final_fdr = calculateFDR()
+        with open(output_prefix+".cor.out",'w') as results:
             results.write(final)
             results.close()
+        with open(output_prefix+".fdr.out",'w') as results:
+            results.write(final_fdr)
+            results.close()
+    printBinary()
     printStratify()
     printValues()
     return(0)
