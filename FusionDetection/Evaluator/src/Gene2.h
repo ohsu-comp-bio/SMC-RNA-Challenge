@@ -41,7 +41,7 @@ public:
 
 
         /*load transcripts from input annotation file with 11 columns.*/
-	int loadGenesFromFile(char * file);
+	int loadGenesFromFile(char * file, int isTruncOK);
 	int setGene();
 
 

@@ -21,7 +21,7 @@ map<int,char> intChar;
 map<char,char> charChar;
 map<string,char> tableAmino;
 
-string version("0.1.3");
+string version("0.1.4");
 
 int usage()
 {
@@ -50,6 +50,7 @@ int usage()
     cerr<<"    -g/--gene-annotation-file    <string>    [ 11 columns             refer to INTEGRATE 0.3.0  ]"<<endl;
     cerr<<"    -s/--subsetting-rule-file    <string>    [  2 columns             refer to SMC-RNA          ]"<<endl;
     cerr<<"    -o/--output-file             <string>    "<<endl;
+    cerr<<"    -a/--all-transcrpt           <No value>  [ turn on all transcripts                          ]"<<endl;
     cerr<<"    -b/--base-resolution         <int>       [ default: 1                                       ]"<<endl;
     cerr<<"    -m/--max-diff                <int>       [ default: 20, tolerance for local homology        ]"<<endl;
     cerr<<"    -u/--use-number              <No value>  [ turn on theoretical metric for 0 denominator     ]"<<endl; 
@@ -75,6 +76,7 @@ int main(int argc, char * argv[])
     int max_diff=20;
     string pseudo_counts="0,0,0,0,0,0";
     int print_num=0;
+    int isTruncOK=0;    
 
     static struct option long_options[] = {
         {"truth-file",            required_argument, 0,  't' },
@@ -85,6 +87,7 @@ int main(int argc, char * argv[])
         {"base-resolution",       required_argument, 0,  'b' },
         {"max-diff",              required_argument, 0,  'm' },
         {"pseudo-counts",         required_argument, 0,  'p' },
+        {"all-transcript",        no_argument,       0,  'a' },
         {"use-number",            no_argument,       0,  'u' },
         {"help",                  no_argument,       0,  'h' },
         {0, 0, 0, 0}
@@ -92,7 +95,7 @@ int main(int argc, char * argv[])
 
     while(1)
     {
-        c = getopt_long(argc, argv, "t:r:g:o:s:b:m:p:uh",
+        c = getopt_long(argc, argv, "t:r:g:o:s:b:m:p:auh",
                  long_options, &option_index);
         if (c==-1)
         {
@@ -127,6 +130,9 @@ int main(int argc, char * argv[])
             case 'p':
                 pseudo_counts=optarg;
                 break;
+            case 'a':
+                isTruncOK=1;
+                break;
             case 'u':
                 print_num=1;
                 break;
@@ -149,7 +155,7 @@ int main(int argc, char * argv[])
     cerr<<"loading gene annotation file..."<<endl;    
 
     Gene g;
-    g.loadGenesFromFile((char*)gene_file.c_str());
+    g.loadGenesFromFile((char*)gene_file.c_str(),isTruncOK);
     g.setGene();    
 
     cerr<<"loading result file..."<<endl;
