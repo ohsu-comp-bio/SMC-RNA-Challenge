@@ -170,7 +170,10 @@ def validate(evaluation, token, dry_run=False):
 
         ## refetch the submission so that we get the file path
         ## to be later replaced by a "downloadFiles" flag on getSubmissionBundles
-        submission = syn.getSubmission(submission)
+        try:
+            submission = syn.getSubmission(submission)
+        except SynapseHTTPError as e:
+            submission = syn.getSubmission(submission,downloadFile=False)
 
         print "validating", submission.id, submission.name
         try:
