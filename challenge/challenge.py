@@ -171,7 +171,7 @@ def validate(evaluation, token, dry_run=False):
         ## refetch the submission so that we get the file path
         ## to be later replaced by a "downloadFiles" flag on getSubmissionBundles
         sub = json.loads(submission['entityBundleJSON'])
-        if sub['fileHandles'][0].get(externalURL) is None:
+        if sub['fileHandles'][0].get('externalURL') is None:
             submission = syn.getSubmission(submission)
         else:
             submission = syn.getSubmission(submission,downloadFile=False)
@@ -225,7 +225,7 @@ def score(evaluation, dry_run=False):
         ## refetch the submission so that we get the file path
         ## to be later replaced by a "downloadFiles" flag on getSubmissionBundles
         sub = json.loads(submission['entityBundleJSON'])
-        if sub['fileHandles'][0].get(externalURL) is None:
+        if sub['fileHandles'][0].get('externalURL') is None:
             submission = syn.getSubmission(submission)
         else:
             submission = syn.getSubmission(submission,downloadFile=False)
