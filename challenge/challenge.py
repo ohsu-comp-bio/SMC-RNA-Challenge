@@ -414,7 +414,7 @@ def archive(evaluation, destination=None, token=None, name=None, query=None):
                 newFilePath = submission.filePath.replace(' ', '_')
                 shutil.move(submission.filePath,newFilePath)
                 #Store CWL file in bucket
-                os.system('gsutil cp -R %s gs://smc-rna-cache/%s' % (submissionId,path))
+                os.system('gsutil cp -R %s gs://smc-rna-eval/entries/%s' % (submissionId,path))
                 with open(newFilePath,"r") as cwlfile:
                     docs = yaml.load(cwlfile)
                     merged = docs['$graph']
@@ -436,14 +436,14 @@ def archive(evaluation, destination=None, token=None, name=None, query=None):
                                     if os.path.basename(i['class']) == "synData":
                                         temp = syn.get(i['entity'])
                                         #create synid and index mapping
-                                        new_map.append([temp.id,"gs://smc-rna-cache/%s/%s/%s" %(path,submissionId,temp.name)])
+                                        new_map.append([temp.id,"gs://smc-rna-eval/entries/%s/%s/%s" %(path,submissionId,temp.name)])
                                         #Store index files
-                                        os.system('gsutil cp %s gs://smc-rna-cache/%s/%s' % (temp.path,path,submissionId))
+                                        os.system('gsutil cp %s gs://smc-rna-eval/entries/%s/%s' % (temp.path,path,submissionId))
                 os.system('rm -rf ~/.synapseCache/*')
             else:
                 os.system('rm %s' % os.path.join(submissionId, submission.name))
                 test = subprocess.check_call(["python", os.path.join(os.path.dirname(__file__),"../../SMC-RNA-Eval/sbg-download.py"), "--token", token, submission.name, submissionId])
-                os.system('gsutil cp -R %s gs://smc-rna-cache/%s' % (submissionId,path))
+                os.system('gsutil cp -R %s gs://smc-rna-eval/entries/%s' % (submissionId,path))
                 #Pull down docker containers
                 with open("%s/submission.cwl" % submissionId,"r") as cwlfile:
                     docs = yaml.load(cwlfile)
@@ -469,7 +469,7 @@ def archive(evaluation, destination=None, token=None, name=None, query=None):
                 #os.system('sudo -i docker save %s' % i)
                 os.system('sudo docker save -o %s.tar %s' %(fileName,i))
                 os.system('sudo chmod a+r %s.tar' % fileName)
-                os.system('gsutil cp %s.tar gs://smc-rna-cache/%s/%s' % (fileName,path,submissionId))
+                os.system('gsutil cp %s.tar gs://smc-rna-eval/entries/%s/%s' % (fileName,path,submissionId))
                 os.remove("%s.tar" % fileName)
             submission_parent = syn.store(Folder(submissionId,parent=destination))
 
