@@ -57,7 +57,7 @@ bool myTransSortFunc(transcript_t i, transcript_t j)
                 return false;
 }
 
-int Gene::loadGenesFromFile(char* file) {
+int Gene::loadGenesFromFile(char* file, int isTrunctOK) {
 
 	uint32_t length=getFilelength(file);
 	
@@ -191,7 +191,7 @@ int Gene::loadGenesFromFile(char* file) {
             int isRealAdd=1;
             if(tt.cdsStart!=tt.cdsEnd && ((tt.txStart==tt.cdsStart)||(tt.txEnd==tt.cdsEnd)))
                   isRealAdd=0;
-            if(isRealAdd==1)
+            if(isRealAdd==1 || isTrunctOK==1)
 	    {
                   transcripts.push_back(tt);
 	          num++;
