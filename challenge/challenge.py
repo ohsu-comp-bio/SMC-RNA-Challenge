@@ -170,9 +170,10 @@ def validate(evaluation, token, dry_run=False):
 
         ## refetch the submission so that we get the file path
         ## to be later replaced by a "downloadFiles" flag on getSubmissionBundles
-        try:
+        sub = json.loads(submission['entityBundleJSON'])
+        if sub['fileHandles'][0].get(externalURL) is None:
             submission = syn.getSubmission(submission)
-        except SynapseHTTPError as e:
+        else:
             submission = syn.getSubmission(submission,downloadFile=False)
 
         print "validating", submission.id, submission.name
@@ -223,7 +224,11 @@ def score(evaluation, dry_run=False):
 
         ## refetch the submission so that we get the file path
         ## to be later replaced by a "downloadFiles" flag on getSubmissionBundles
-        submission = syn.getSubmission(submission)
+        sub = json.loads(submission['entityBundleJSON'])
+        if sub['fileHandles'][0].get(externalURL) is None:
+            submission = syn.getSubmission(submission)
+        else:
+            submission = syn.getSubmission(submission,downloadFile=False)
 
         try:
             score, message = conf.score_submission(evaluation, submission)
