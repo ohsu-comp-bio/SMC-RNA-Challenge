@@ -172,7 +172,7 @@ def validate(evaluation, token, dry_run=False):
         ## to be later replaced by a "downloadFiles" flag on getSubmissionBundles
         sub = json.loads(submission['entityBundleJSON'])
         if len(sub['fileHandles']) == 0:
-            submission = None
+            submission = syn.getSubmission(submission)
         else:
             if sub['fileHandles'][0].get('externalURL') is None:
                 submission = syn.getSubmission(submission)

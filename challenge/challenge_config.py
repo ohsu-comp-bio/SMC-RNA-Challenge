@@ -85,8 +85,7 @@ leaderboard_tables = {}
 
 ## Testing link validation: 7155824
 def validate(evaluation,submission,syn,token):
-    if submission is None:
-        raise AssertionError("Must submit a File Entity")
+    assert isinstance(submission.entity, synapseclient.File), "Must submit a file entity"
     if submission.entity.externalURL is None:
         try:
             #test = subprocess.check_call(["cwltool", "--print-pre", submission.filePath])
