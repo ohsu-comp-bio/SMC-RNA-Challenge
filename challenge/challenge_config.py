@@ -173,7 +173,8 @@ def validate(evaluation,submission,syn,token):
                     assert steps in cwltools, 'Your tool inputs do not match your workflow inputs'
                     #Check: All sources used are included in the workflow inputs
                     if 'source' in y:
-                        assert y['source'] in workflowinputs, 'Not all of your inputs in your workflow are mapped'
+                        y['source'] = [y['source']] if isinstance(y['source'],str) else y['source']
+                        assert all([source in workflowinputs for source in y['source']]), 'Not all of your inputs in your workflow are mapped'
             for i in workflow['outputs']:
                 assert i['id'] == '#main/OUTPUT', "Your workflow output id must be OUTPUT"
                 #Check: All outputs have the correct sources mapped
