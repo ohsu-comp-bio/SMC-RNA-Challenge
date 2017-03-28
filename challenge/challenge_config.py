@@ -169,8 +169,9 @@ def validate(evaluation,submission,syn,token):
             for i in workflow['steps']:
                 for y in i[inputs]:
                     #Check: Workflow tool steps match the cwltools inputs
-                    steps = "%s/#%s/%s" % ("input",i['run'][1:],os.path.basename(y['id']))
-                    assert steps in cwltools, 'Your tool inputs do not match your workflow inputs'
+                    if isinstance(i['run'],str):
+                        steps = "%s/#%s/%s" % ("input",i['run'][1:],os.path.basename(y['id']))
+                        assert steps in cwltools, 'Your tool inputs do not match your workflow inputs'
                     #Check: All sources used are included in the workflow inputs
                     if 'source' in y:
                         assert y['source'] in workflowinputs, 'Not all of your inputs in your workflow are mapped'
