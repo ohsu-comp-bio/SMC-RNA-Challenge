@@ -420,7 +420,9 @@ def archive(evaluation, destination=None, token=None, name=None, query=None):
         check = syn.query('select id,name from folder where parentId == "%s" and name == "%s"' % (destination,submissionId))
         if check['totalNumberOfResults']==0:
             os.mkdir(submissionId)
-            submission = syn.getSubmission(submissionId, downloadLocation=submissionId)
+            submission = syn.getSubmission(submissionId, downloadFile=False)
+            if submission.entity.externalURL is None:
+                submission = syn.getSubmission(submissionId, downloadLocation=submissionId,downloadFile=False)
             if submission.entity.externalURL is None:
                 newFilePath = submission.filePath.replace(' ', '_')
                 shutil.move(submission.filePath,newFilePath)
