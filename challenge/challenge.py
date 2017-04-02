@@ -419,11 +419,10 @@ def archive(evaluation, destination=None, token=None, name=None, query=None):
         submissionId = result[results.headers.index('objectId')]
         check = syn.query('select id,name from folder where parentId == "%s" and name == "%s"' % (destination,submissionId))
         if check['totalNumberOfResults']==0:
-            #os.mkdir(submissionId)
+            os.mkdir(submissionId)
             submission = syn.getSubmission(submissionId, downloadFile=False)
             if submission.entity.externalURL is None:
-                submission = syn.getSubmission(submissionId, downloadLocation=submissionId,downloadFile=False)
-            if submission.entity.externalURL is None:
+                submission = syn.getSubmission(submissionId, downloadLocation=submissionId)
                 newFilePath = submission.filePath.replace(' ', '_')
                 shutil.move(submission.filePath,newFilePath)
                 #Store CWL file in bucket
@@ -454,12 +453,11 @@ def archive(evaluation, destination=None, token=None, name=None, query=None):
                                         os.system('gsutil cp %s gs://smc-rna-eval/entries/%s/%s' % (temp.path,path,submissionId))
                 os.system('rm -rf ~/.synapseCache/*')
             else:
-                #os.system('rm %s' % os.path.join(submissionId, submission.name))
                 if submission.entity.externalURL.endswith("/"):
                     submission.entity.externalURL = submission.entity.externalURL[:-1]
                 taskId = submission.entity.externalURL.split("/")[-1]
-                #test = subprocess.check_call(["python", os.path.join(os.path.dirname(__file__),"../../SMC-RNA-Eval/sbg-download.py"), "--token", token, taskId, submissionId])
-                #os.system('gsutil cp -R %s gs://smc-rna-eval/entries/%s' % (submissionId,path))
+                test = subprocess.check_call(["python", os.path.join(os.path.dirname(__file__),"../../SMC-RNA-Eval/sbg-download.py"), "--token", token, taskId, submissionId])
+                os.system('gsutil cp -R %s gs://smc-rna-eval/entries/%s' % (submissionId,path))
                 #Pull down docker containers
                 with open("%s/submission.cwl" % submissionId,"r") as cwlfile:
                     docs = yaml.load(cwlfile)
