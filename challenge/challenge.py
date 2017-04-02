@@ -454,7 +454,7 @@ def archive(evaluation, destination=None, token=None, name=None, query=None):
                                         os.system('gsutil cp %s gs://smc-rna-eval/entries/%s/%s' % (temp.path,path,submissionId))
                 os.system('rm -rf ~/.synapseCache/*')
             else:
-                os.system('rm %s' % os.path.join(submissionId, submission.name))
+                #os.system('rm %s' % os.path.join(submissionId, submission.name))
                 if submission.entity.externalURL.endswith("/"):
                     submission.entity.externalURL = submission.entity.externalURL[:-1]
                 taskId = submission.entity.externalURL.split("/")[-1]
