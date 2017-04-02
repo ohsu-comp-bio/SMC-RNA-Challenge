@@ -463,17 +463,21 @@ def archive(evaluation, destination=None, token=None, name=None, query=None):
                 #Pull down docker containers
                 with open("%s/submission.cwl" % submissionId,"r") as cwlfile:
                     docs = yaml.load(cwlfile)
-                    merged = docs['steps']
+                    # merged = docs['steps']
+                    # docker = []
+                    # for tools in merged:
+                    #     for hint in tools['run']['hints']:
+                    #         if hint['class'] == 'DockerRequirement':
+                    #             docker.append(hint['dockerPull'])
+                    #     for require in tools['run']['requirements']:
+                    #         if require.get('requirements') is not None:
+                    #             for i in require.get('requirements'):
+                    #                 if i['class'] == 'DockerRequirement':
+                    #                     docker.append(i['dockerPull'])
                     docker = []
-                    for tools in merged:
-                        for hint in tools['run']['hints']:
-                            if hint['class'] == 'DockerRequirement':
-                                docker.append(hint['dockerPull'])
-                        for require in tools['run']['requirements']:
-                            if require.get('requirements') is not None:
-                                for i in require.get('requirements'):
-                                    if i['class'] == 'DockerRequirement':
-                                        docker.append(i['dockerPull'])
+                    for tools in docs['hints']:
+                        if tools['class'] == "DockerRequirement":
+                            docker.append(tools['dockerPull'])
             os.system('rm -rf %s' % submissionId)
             if len(new_map) > 0:
                 table = syn.store(Table(mapping, new_map))
