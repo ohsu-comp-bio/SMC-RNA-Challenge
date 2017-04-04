@@ -84,7 +84,7 @@ def get_integer(message):
 def get_length(target):
     return valid_to_length[target]    
 
-def valid_pos_pair(pos1,pos2,length):
+def valid_pos_pair(pos1,pos2,length, lineno):
     ism1_1=True
     ism1_2=True
     if(pos1!=-1):
@@ -92,27 +92,27 @@ def valid_pos_pair(pos1,pos2,length):
     if(pos2!=-1):
         ism1_2=False
     if ism1_1 and ism1_2:
-        print "Positions -1 -1 are not allowed."
+        print "Positions -1 -1 are not allowed.", "Line:", lineno
     if ism1_1 and (not ism1_2):
         if pos2>length or pos2<1:
-            print "Position",pos2,"out of range" 
+            print "Position",pos2,"out of range" , "Line:", lineno
             sys.exit(1)
     if (not ism1_1) and ism1_2:
         if pos1+1>length or pos1+1<1:
-            print "Position",pos1,"out of range"
+            print "Position",pos1,"out of range", "Line:", lineno
             sys.exit(1)
     if (not ism1_1) and (not ism1_2):
         if pos1+1>pos2:
-            print "Position",pos1,"+1 >",pos2
+            print "Position",pos1,"+1 >",pos2, "Line:", lineno
             sys.exit(1)
         if pos1+1<1:
-             print "Position",pos1,"out of range"
+             print "Position",pos1,"out of range", "Line:", lineno
         if pos2>length:
-             print "Position",pos2,"out of range"
+             print "Position",pos2,"out of range", "Line:", lineno
 
-def valid_strand(strand):
+def valid_strand(strand, lineno, colno):
     if not (strand=="+" or strand=="-" or strand=="."):
-        print "Strand should only contain +/-/."
+        print "Strand should only contain +/-/.", "Line:", lineno, "Col:", colno
         sys.exit(1)
     return strand
 
@@ -122,18 +122,18 @@ def is_contain_dot(strand1,strand2):
     else:
         return False
 
-def check_float(message):
+def check_float(message, lineno, colno):
     try:
         userInput = float(message)
     except ValueError:
-        print "\""+message+"\"" " is not a number or \".\"."
+        print "\""+message+"\"" " is not a number or \".\".", "Line:", lineno, "Col:", colno
         sys.exit(1)
 
-def check_quantificaton_ok(num):
+def check_quantificaton_ok(num, lineno, colno):
     if num==".":
         return 
     else:
-        check_float(num)
+        check_float(num, lineno, colno)
 
 out_data = []
 
@@ -141,29 +141,31 @@ def validate_file(fileName):
     infile = "%s" % fileName
     f=open(infile,"r")
     index=0
+    lineno = 0
     while True:
         line=f.readline()
+        lineno += 1
         if line=="":
             break
         else:
             tmp=line.split("\t")
             if(len(tmp)<10):
-                print "Number of columns of bedpe for fusion should be 10 or 11"
+                print "Number of columns of bedpe for fusion should be 10 or 11", "Line:", lineno
                 sys.exit(1)
             tmp[len(tmp)-1] = tmp[len(tmp)-1][0:len(tmp[len(tmp)-1])-1]
             chr1=get_target(tmp[0])
             tmp[0]=chr1
-            valid_pos_pair(get_integer(tmp[1]),get_integer(tmp[2]),get_length(chr1))
+            valid_pos_pair(get_integer(tmp[1]),get_integer(tmp[2]),get_length(chr1), lineno)
             chr2=get_target(tmp[3])
             tmp[3]=chr2
-            valid_pos_pair(get_integer(tmp[4]),get_integer(tmp[5]),get_length(chr2))
-            iscd=is_contain_dot(valid_strand(tmp[8]),valid_strand(tmp[9]))
+            valid_pos_pair(get_integer(tmp[4]),get_integer(tmp[5]),get_length(chr2), lineno)
+            iscd=is_contain_dot(valid_strand(tmp[8], lineno, 9),valid_strand(tmp[9], lineno, 10))
             if iscd==True:
-                print "Dot not allowed for strand."
+                print "Dot not allowed for strand.", "Line:", lineno
                 sys.exit(1)
             #Add check for if quantification column exists
             if len(tmp) == 11:
-                check_quantificaton_ok(tmp[10])
+                check_quantificaton_ok(tmp[10], lineno, 11)
             out_data.append(tmp) 
     f.close()
 
